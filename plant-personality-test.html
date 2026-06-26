@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>你的命中注定 · 植物性格测试</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-page: #F9F6F1;
+    --bg-card: #FFFEFA;
+    --text-primary: #2B2523;
+    --text-secondary: #5C5048;
+    --text-muted: #948B82;
+    /* 中式配色三原色 */
+    --dai-blue: #3B5A6D;
+    --shi-green: #5B8C6F;
+    --rouge: #B5453A;
+    --rouge-light: #D4847A;
+    --rouge-ghost: rgba(181,69,58,0.05);
+    --border: #E0D9CF;
+    --border-light: #EDE7DD;
+    /* 优化：阴影雾化为超浅色烟雾感 */
+    --shadow-card: 0 2px 32px rgba(92,75,62,0.03);
+    --shadow-card-hover: 0 4px 40px rgba(92,75,62,0.05);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --transition-smooth: 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+    /* 优化：呼吸感排版 — line-height 1.9-2.2，letter-spacing +0.5px */
+    --font-body: 15px;
+    --line-height-body: 2.0;
+    --card-width: 330px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Serif SC', Georgia, serif;
+    background: var(--bg-page);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    color: var(--text-primary);
+    font-size: var(--font-body);
+    line-height: var(--line-height-body);
+    /* 优化：字间距拉开0.5px，呼吸缝隙 */
+    letter-spacing: 0.9px;
+  }
+
+  /* ===== 主容器 ===== */
+  .app-container {
+    width: 100%;
+    height: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== 页面容器 ===== */
+  .page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 32px;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+  }
+  .page.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* ===== 首页 - 封面 ===== */
+  .home-page { text-align: center; gap: 28px; }
+  .home-logo {
+    width: 72px; height: 72px;
+    opacity: 0.85;
+    animation: float 3.2s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .home-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    line-height: 1.5;
+  }
+  .home-title .highlight {
+    background: linear-gradient(135deg, var(--rouge), var(--rouge-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .home-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 4px;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+  .home-divider {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rouge-light), transparent);
+    border-radius: 1px;
+  }
+  .home-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 2;
+    max-width: 260px;
+  }
+  .btn-start {
+    margin-top: 8px;
+    padding: 16px 52px;
+    background: var(--rouge);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(181,69,58,0.22);
+    transition: all 0.3s ease;
+  }
+  .btn-start:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 14px rgba(181,69,58,0.14);
+  }
+
+  /* ===== 答题页 ===== */
+  .quiz-page { justify-content: flex-start; padding-top: 52px; gap: 0; }
+  .quiz-progress-wrap { width: 100%; margin-bottom: 36px; }
+  .quiz-progress-bar {
+    width: 100%; height: 3px;
+    background: var(--border-light);
+    border-radius: 2px; overflow: hidden;
+  }
+  .quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--shi-green), var(--dai-blue));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .quiz-progress-text {
+    text-align: right; font-size: 11px;
+    color: var(--text-muted); margin-top: 8px; letter-spacing: 2px;
+  }
+  .quiz-question-card {
+    width: 100%;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px;
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    border: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .quiz-question-card.switching { opacity: 0; transform: translateY(-12px); }
+  .quiz-question-number {
+    font-size: 11px; color: var(--rouge);
+    letter-spacing: 5px; margin-bottom: 18px; font-weight: 600;
+  }
+  .quiz-question-title {
+    font-size: 17px; font-weight: 700;
+    color: var(--text-primary); line-height: 1.8; margin-bottom: 28px;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    width: 100%; padding: 16px 18px;
+    background: #F9F5F0;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px; color: var(--text-primary);
+    cursor: pointer; text-align: left;
+    transition: all 0.3s ease;
+    font-weight: 500; line-height: 1.7;
+  }
+  .quiz-option .option-label {
+    display: inline-block; width: 26px; height: 26px;
+    line-height: 26px; text-align: center;
+    background: rgba(91,140,111,0.12);
+    color: var(--shi-green); border-radius: 50%;
+    font-size: 12px; font-weight: 700;
+    margin-right: 10px; flex-shrink: 0; transition: all 0.3s ease;
+  }
+  .quiz-option.selected .option-label { background: var(--shi-green); color: #fff; }
+  .quiz-option:active { background: #EFE8DF; border-color: var(--border); transform: scale(0.98); }
+  .quiz-option.selected {
+    background: rgba(91,140,111,0.08);
+    border-color: var(--shi-green);
+  }
+
+  /* ==================== 结果页 - 极简新中式 ==================== */
+  .result-page {
+    justify-content: flex-start;
+    padding: 0 0 40px 0;
+    gap: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .result-page-inner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 40px 24px 56px;
+  }
+
+  /* 结果头部 */
+  .result-header { text-align: center; margin-bottom: 12px; }
+  .result-plant-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    opacity: 0.8;
+    animation: float 2.8s ease-in-out infinite;
+  }
+  .result-plant-name {
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 4px;
+    line-height: 1.3;
+  }
+  .result-plant-subtitle {
+    font-size: 13px; color: var(--text-muted);
+    letter-spacing: 3px; margin-top: 8px;
+    font-weight: 400; font-style: italic;
+  }
+  .result-phase-badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 20px;
+    border: none;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--dai-blue);
+    background: rgba(59,90,109,0.05);
+    box-shadow: 0 1px 12px rgba(92,75,62,0.02);
+  }
+
+  /* ===== 核心金句 ===== */
+  .result-quote-block {
+    width: 100%;
+    text-align: center;
+    padding: 32px 24px;
+    margin: 24px 0 12px;
+    position: relative;
+  }
+  .result-quote-text {
+    font-size: 19px; font-weight: 600;
+    color: var(--text-primary);
+    line-height: 2;
+    letter-spacing: 2px;
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+  }
+  .result-quote-text::before {
+    content: '\201C';
+    font-size: 44px; color: var(--rouge-light);
+    position: absolute; left: -32px; top: -14px;
+    font-family: Georgia, 'Noto Serif SC', serif;
+    line-height: 1; font-weight: 400; opacity: 0.6;
+  }
+  .result-quote-text::after {
+    content: '\201D';
+    font-size: 44px; color: var(--rouge-light);
+    position: absolute; right: -32px; bottom: -28px;
+    font-family: Georgia, 'Noto Serif SC', serif;
+    line-height: 1; font-weight: 400; opacity: 0.6;
+  }
+  .result-quote-divider {
+    width: 36px; height: 1px;
+    background: var(--border);
+    margin: 24px auto 0;
+    border-radius: 1px;
+  }
+
+  /* ===== 胶囊标签 ===== */
+  .result-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0 28px;
+  }
+  .result-tag-pill {
+    display: inline-block;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 18px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    letter-spacing: 2.5px;
+    font-weight: 500;
+    background: rgba(247,244,239,0.7);
+    box-shadow: 0 1px 8px rgba(92,75,62,0.02);
+  }
+
+  /* ===== 雷达图 ===== */
+  .radar-container {
+    width: 100%;
+    max-width: 240px;
+    margin: 8px auto 32px;
+    position: relative;
+  }
+  .radar-container canvas { width: 100% !important; height: auto !important; }
+  .radar-section-title {
+    text-align: center;
+    font-size: 11px; color: var(--text-muted);
+    letter-spacing: 4px; margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  /* ===== 生命切片卡片（极简 — 优化：去边框、烟雾阴影） ===== */
+  .slice-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    border: none;
+    /* 生长动画初始状态 — 优化：更细腻的延迟 */
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .slice-card.grown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .slice-card-icon {
+    width: 28px; height: 28px;
+    margin-bottom: 12px;
+    opacity: 0.65;
+  }
+  .slice-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3.5px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(224,217,207,0.5);
+  }
+  .slice-card-body {
+    font-size: var(--font-body);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body);
+    text-align: left;
+    letter-spacing: 0.9px;
+  }
+  /* 素描卡片 */
+  .slice-card.sketch-card .slice-card-title { color: var(--dai-blue); border-bottom-color: rgba(59,90,109,0.12); }
+  .slice-card.sketch-card .slice-card-body { font-size: 16px; font-weight: 500; color: var(--text-primary); font-style: italic; }
+  /* 归宿卡片 — 优化：去边框，温润渐变 */
+  .slice-card.exit-card {
+    background: linear-gradient(135deg, #FBF9F5, #FFFEFA);
+    border: none;
+    box-shadow: 0 2px 28px rgba(92,75,62,0.04);
+  }
+  .slice-card.exit-card .slice-card-title { color: var(--rouge); border-bottom-color: rgba(181,69,58,0.08); }
+  .slice-card.exit-card .slice-card-body { color: #6B3A2E; font-weight: 500; }
+
+  /* 灵魂契约植物 — 优化：去边框，烟雾阴影 */
+  .contract-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: rgba(255,254,250,0.9);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 28px rgba(92,75,62,0.03);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s,
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s;
+  }
+  .contract-card.grown { opacity: 1; transform: translateY(0); }
+  .contract-card-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 3.5px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .contract-card-name {
+    font-size: 20px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 16px; letter-spacing: 1.5px;
+  }
+  .contract-card-desc {
+    font-size: var(--font-body); line-height: var(--line-height-body);
+    color: var(--text-secondary); text-align: justify; letter-spacing: 0.9px;
+  }
+
+  /* 共振植物谱系卡片 — 新中式高级感 */
+  .resonance-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: linear-gradient(135deg, rgba(247,244,239,0.6), rgba(255,254,250,0.9));
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 24px rgba(92,75,62,0.025);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.18s,
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.18s;
+  }
+  .resonance-card.grown { opacity: 1; transform: translateY(0); }
+  .resonance-card-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 3.5px; margin-bottom: 18px; text-transform: uppercase;
+  }
+  .resonance-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(224,217,207,0.35);
+  }
+  .resonance-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .resonance-plant-icon {
+    width: 22px; height: 22px; flex-shrink: 0;
+    opacity: 0.55; margin-top: 2px;
+  }
+  .resonance-plant-name {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    letter-spacing: 1px; line-height: 1.6;
+  }
+  .resonance-plant-mutter {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.9; letter-spacing: 0.7px;
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  /* 底部操作 */
+  .result-save-hint {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 28px 0 12px;
+    font-size: 11px; color: var(--text-muted); letter-spacing: 2px;
+  }
+  .result-save-hint svg { width: 18px; height: 18px; opacity: 0.5; animation: float 2s ease-in-out infinite; }
+  .btn-restart {
+    padding: 14px 44px;
+    background: var(--bg-card);
+    color: var(--rouge);
+    border: none;
+    border-radius: 50px;
+    font-size: 14px; font-weight: 600; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.3s ease; margin-bottom: 20px;
+    box-shadow: 0 2px 18px rgba(92,75,62,0.04);
+  }
+  .btn-restart:active {
+    background: #FDF8F4;
+    transform: scale(0.96);
+  }
+
+  /* 背景装饰 */
+  .bg-decoration {
+    position: absolute; border-radius: 50%;
+    pointer-events: none; z-index: 0; opacity: 0.03;
+  }
+  .bg-dot-1 {
+    width: 200px; height: 200px;
+    background: var(--dai-blue);
+    top: -60px; right: -60px;
+    animation: float 7s ease-in-out infinite;
+  }
+  .bg-dot-2 {
+    width: 140px; height: 140px;
+    background: var(--shi-green);
+    bottom: -40px; left: -40px;
+    animation: float 6s ease-in-out infinite reverse;
+  }
+  .bg-dot-3 {
+    width: 80px; height: 80px;
+    background: var(--rouge);
+    top: 45%; right: 8%;
+    animation: float 5s ease-in-out infinite 1s;
+  }
+
+  /* 标题区生长动画 — 优化：更细腻的淡入与上移，stagger effect */
+  .result-header, .result-quote-block, .result-tags-row, .radar-section-title, .radar-container {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .result-header.grown, .result-quote-block.grown, .result-tags-row.grown,
+  .radar-section-title.grown, .radar-container.grown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="bg-decoration bg-dot-1"></div>
+  <div class="bg-decoration bg-dot-2"></div>
+  <div class="bg-decoration bg-dot-3"></div>
+
+  <!-- ========== 首页 ========== -->
+  <div class="page home-page active" id="homePage">
+    <!-- 去Emoji化：使用SVG线条图标 -->
+    <svg class="home-logo" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="28" r="16" stroke="#B5453A" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M36 44 L36 62" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+      <path d="M26 52 Q36 48 46 52" stroke="#B5453A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4"/>
+      <path d="M22 34 Q30 26 36 20 Q42 26 50 34" stroke="#D4847A" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+    <h1 class="home-title">
+      你的<span class="highlight">命中注定</span><br>是哪一株植物
+    </h1>
+    <div class="home-divider"></div>
+    <p class="home-subtitle">PLANT PERSONALITY TEST</p>
+    <p class="home-desc">
+      每个人都是一颗独特的种子<br>
+      在光照与土壤之间，找到你的根系所在
+    </p>
+    <button class="btn-start" id="btnStart" onclick="startQuiz()">
+      开启命中注定的测试
+    </button>
+  </div>
+
+  <!-- ========== 答题页 ========== -->
+  <div class="page quiz-page" id="quizPage">
+    <div class="quiz-progress-wrap">
+      <div class="quiz-progress-bar">
+        <div class="quiz-progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="quiz-progress-text" id="progressText">1 / 12</div>
+    </div>
+    <div class="quiz-question-card" id="questionCard">
+      <div class="quiz-question-number" id="questionNumber">Q1</div>
+      <div class="quiz-question-title" id="questionTitle"></div>
+      <div class="quiz-options" id="optionsContainer"></div>
+    </div>
+  </div>
+
+  <!-- ========== 结果页 ========== -->
+  <div class="page result-page" id="resultPage">
+    <div class="result-page-inner">
+      <div class="result-header" id="resultHeader">
+        <div class="result-plant-icon" id="resultIconSvg"></div>
+        <div class="result-plant-name" id="resultPlantName"></div>
+        <div class="result-plant-subtitle" id="resultPlantSubtitle"></div>
+        <div class="result-phase-badge" id="resultPhaseBadge"></div>
+      </div>
+
+      <!-- 核心金句 -->
+      <div class="result-quote-block" id="resultQuoteBlock">
+        <div class="result-quote-text" id="resultQuote"></div>
+        <div class="result-quote-divider"></div>
+      </div>
+
+      <!-- 胶囊标签 -->
+      <div class="result-tags-row" id="resultTagsRow"></div>
+
+      <!-- 雷达图 -->
+      <div class="radar-section-title" id="radarTitle">五维灵魂结构</div>
+      <div class="radar-container" id="radarContainer">
+        <canvas id="radarChart"></canvas>
+      </div>
+
+      <!-- 生命切片① 素描 -->
+      <div class="slice-card sketch-card" id="cardSketch">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="7" stroke="#3B5A6D" stroke-width="1.5"/><path d="M14 17 L14 26" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M9 22 L14 18 L19 22" stroke="#3B5A6D" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">灵魂素描</div>
+        <div class="slice-card-body" id="textSketch"></div>
+      </div>
+
+      <!-- 生命切片② 共生困境 -->
+      <div class="slice-card" id="cardWhyDie">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M14 2 C8 8 6 14 6 18 C6 22 10 26 14 26 C18 26 22 22 22 18 C22 14 20 8 14 2Z" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M14 10 L14 20" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/><path d="M10 15 L18 15" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">共生困境</div>
+        <div class="slice-card-body" id="textWhyDie"></div>
+      </div>
+
+      <!-- 生命切片③ 暗面 -->
+      <div class="slice-card" id="cardShadowSlice">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#B5453A" stroke-width="1.5"/><circle cx="14" cy="14" r="6" stroke="#D4847A" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="slice-card-title">暗面暗号</div>
+        <div class="slice-card-body" id="textShadowSlice"></div>
+      </div>
+
+      <!-- 生命切片④ 灵魂契约植物 -->
+      <div class="contract-card" id="cardContract">
+        <div class="contract-card-label">LIFESTYLE · 灵魂契约</div>
+        <div class="contract-card-name" id="labelSuitable"></div>
+        <div class="contract-card-desc" id="textSuitable"></div>
+      </div>
+
+      <!-- 生命切片④½ 共振植物谱系 -->
+      <div class="resonance-card" id="cardResonance">
+        <div class="resonance-card-label">✧ 共振植物谱系 · 与灵魂共振的合适植物</div>
+        <div id="resonanceList"></div>
+      </div>
+
+      <!-- 生命切片⑤ 精神搭子 -->
+      <div class="slice-card" id="cardLover">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M4 18 Q8 6 14 4 Q20 6 24 18" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="14" cy="10" r="2" stroke="#3B5A6D" stroke-width="1"/><circle cx="10" cy="18" r="1.5" stroke="#3B5A6D" stroke-width="1"/><circle cx="18" cy="18" r="1.5" stroke="#3B5A6D" stroke-width="1"/></svg>
+        <div class="slice-card-title">精神搭子</div>
+        <div class="slice-card-body" id="textLover"></div>
+      </div>
+
+      <!-- 生命切片⑥ 归宿 -->
+      <div class="slice-card exit-card" id="cardInsomnia">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M14 3 L14 12" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M14 15 L14 25" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M7 14 L13 14" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M15 14 L21 14" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">深夜防锈指南</div>
+        <div class="slice-card-body" id="textInsomnia"></div>
+      </div>
+
+      <div class="result-save-hint">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 2 L9 14 M4 10 L9 15 L14 10" stroke="#948B82" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span>长按屏幕保存你的测试结果</span>
+      </div>
+      <button class="btn-restart" onclick="restartQuiz()">重新测试</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 多维度计分引擎（五维） ====================
+// [重构逻辑：在原有四维基础上增加 Chronos 时间相位维度]
+const ScoreEngine = {
+  scores: { light: 50, dry: 50, bloom: 50, soil: 50, chronos: 0 },
+  reset() { this.scores = { light: 50, dry: 50, bloom: 50, soil: 50, chronos: 0 }; },
+  apply(effects) {
+    for (const [key, delta] of Object.entries(effects)) {
+      if (this.scores.hasOwnProperty(key)) {
+        this.scores[key] = Math.max(5, Math.min(95, this.scores[key] + delta));
+      }
+    }
+  },
+  getSnapshot() { return { ...this.scores }; },
+
+  // [重构逻辑：Chronos 维度 — 基于答题分布特征计算时间相位]
+  // 总分越高、波动越大 → "发散"（初生）；总分越低、越平稳 → "收敛"（沉淀）
+  computeChronos(answerHistory) {
+    const vals = answerHistory; // 每个选项的 effect 强度总和
+    const sum = vals.reduce((a, b) => a + b, 0);
+    const avg = sum / vals.length;
+    const variance = vals.reduce((s, v) => s + (v - avg) * (v - avg), 0) / vals.length;
+    // chronos > 0 → 发散/初生；chronos <= 0 → 收敛/沉淀
+    this.scores.chronos = Math.round((avg * 0.6 + Math.sqrt(variance) * 0.4) - 50);
+  }
+};
+
+// [重构逻辑：混沌因子 — 极小的 Math.random() 偏差，制造诗性差异]
+let chaosSeed = Math.random() * 0.001;
+
+// ==================== 题库（12道题，保持不变） ====================
+const questions = [
+  {
+    id: 1,
+    title: '如果把你的疲惫拟音化，你觉得它最像以下哪种声音？',
+    options: [
+      { label: 'A', text: '旷野上风穿过枯草的沙沙声', effects: { light: -10, dry: +15, bloom: 0, soil: -5 } },
+      { label: 'B', text: '深夜无人的房间里，石英钟表盘沉重的滴答声', effects: { light: -15, dry: +5, bloom: -10, soil: 0 } },
+      { label: 'C', text: '暴雨突然砸向盛夏芭蕉叶，那种沉闷又密集的撞击声', effects: { light: +10, dry: -10, bloom: +15, soil: 0 } },
+      { label: 'D', text: '咖啡馆里无数环境音和杯盏碰撞，被隔绝在耳机外的嗡嗡声', effects: { light: +5, dry: +5, bloom: 0, soil: +10 } }
+    ]
+  },
+  {
+    id: 2,
+    title: '当你在一段关系或一个集体中感到"被冒犯"时，你的第一本能是？',
+    options: [
+      { label: 'A', text: '瞬间开启"静音模式"，表面客客气气，内心已经默默和对方断联', effects: { light: -5, dry: +20, bloom: 0, soil: -10 } },
+      { label: 'B', text: '自嘲或开玩笑化解，但事后会在深夜反复咀嚼、内耗很久', effects: { light: +10, dry: -15, bloom: +10, soil: 0 } },
+      { label: 'C', text: '带着冷酷的理智直接温和回击，不带情绪，但刺得对方极痛', effects: { light: +5, dry: +10, bloom: +15, soil: 0 } },
+      { label: 'D', text: '算了，无所谓，潜意识里觉得反正大家迟早都会散场', effects: { light: 0, dry: +10, bloom: 0, soil: -20 } }
+    ]
+  },
+  {
+    id: 3,
+    title: '允许你偷走宇宙的一样东西放进你的房间，你最想带走什么？',
+    options: [
+      { label: 'A', text: '永远在半空中漂浮、不受任何重力约束的一缕云雾', effects: { light: +5, dry: 0, bloom: +5, soil: -15 } },
+      { label: 'B', text: '超新星爆发那一瞬间，被定格在时间缝隙里的耀眼微光', effects: { light: +15, dry: -5, bloom: +15, soil: 0 } },
+      { label: 'C', text: '一块沉睡在深海几千米下、能够吞噬所有喧嚣的透明黑曜石', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'D', text: '被雨水打湿的、散发着微苦橙叶气味的黄昏空气', effects: { light: +5, dry: -5, bloom: 0, soil: +15 } }
+    ]
+  },
+  {
+    id: 4,
+    title: '刷到感兴趣的内容时，你在社交平台（如小红书）通常处于什么状态？',
+    options: [
+      { label: 'A', text: '疯狂精修图文，追求极致视觉与高密度思考，渴望被精准读懂', effects: { light: +20, dry: -10, bloom: +10, soil: 0 } },
+      { label: 'B', text: '仅当赛博日记，记录极其私人碎片化的意识流，不在乎有没有人看', effects: { light: -15, dry: +10, bloom: 0, soil: -5 } },
+      { label: 'C', text: '只点赞收藏，几乎不发帖，像一个冷静潜水的隐形局外人', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'D', text: '偶尔情绪上头发些毁灭感碎碎念，过几天又悄悄删掉', effects: { light: +10, dry: -15, bloom: +20, soil: 0 } }
+    ]
+  },
+  {
+    id: 5,
+    title: '如果你的安全感有一个具象化的场景，它会是？',
+    options: [
+      { label: 'A', text: '一个人在暴雨夜的小屋里，拉死窗帘，亮一盏暖黄色的微光台灯', effects: { light: -10, dry: +5, bloom: 0, soil: +15 } },
+      { label: 'B', text: '独自走在完全陌生的异国街头，周围没有任何人认识你', effects: { light: +5, dry: +15, bloom: 0, soil: -20 } },
+      { label: 'C', text: '待在有猫有狗、植物肆意生长的杂乱房间，听它们均匀的呼吸声', effects: { light: -5, dry: -10, bloom: 0, soil: +20 } },
+      { label: 'D', text: '站在能俯瞰整座城市霓虹的悬崖边缘，风极大，但你很清醒', effects: { light: +10, dry: +15, bloom: +10, soil: 0 } }
+    ]
+  },
+  {
+    id: 6,
+    title: '你怎么看待自己身上那些"不合群、敏感、别扭"的小角落？',
+    options: [
+      { label: 'A', text: '讨厌它们，让我活得很累，一直在努力学着变钝、学着妥协', effects: { light: 0, dry: -15, bloom: -5, soil: +10 } },
+      { label: 'B', text: '它们是我保护自己的尖刺。我用冷漠伪装它们，懂的人自然会懂', effects: { light: -5, dry: +20, bloom: +5, soil: 0 } },
+      { label: 'C', text: '无所谓，这是我保持清醒和艺术触角的武器，我很骄傲自己是个异类', effects: { light: +15, dry: +15, bloom: 0, soil: -10 } },
+      { label: 'D', text: '一种隐秘的宿命。觉得在过去的某个时代，肯定也有人和我一模一样地纠结过', effects: { light: 0, dry: -5, bloom: +5, soil: +15 } }
+    ]
+  },
+  {
+    id: 7,
+    title: '想象一下，如果你桌上那盆养了很久的植物突然在深夜对你开口说了一句话，你直觉它会说什么？',
+    options: [
+      { label: 'A', text: '"别看了，早点睡吧，你的内耗把我都熏枯萎了。"', effects: { light: -10, dry: -10, bloom: +15, soil: 0 } },
+      { label: 'B', text: '"其实你不用每天都来盯着我，我们保持距离，各自生长就很好。"', effects: { light: -5, dry: +20, bloom: 0, soil: -5 } },
+      { label: 'C', text: '"谢谢你今天带回来的那束光，我很喜欢。"', effects: { light: +15, dry: -10, bloom: 0, soil: +10 } },
+      { label: 'D', text: '"带我走吧，这个房间的班味太重了，我想去旷野。"', effects: { light: 0, dry: +10, bloom: +5, soil: -20 } }
+    ]
+  },
+  {
+    id: 8,
+    title: '在你的潜意识里，你认为"养花总是死"的终极原因往往是因为？',
+    options: [
+      { label: 'A', text: '三分钟热度，刚买来时恨不得一天浇八次水，过几天就完全忘了它的存在', effects: { light: +5, dry: -15, bloom: +20, soil: 0 } },
+      { label: 'B', text: '总是把它放在阴暗的角落，害怕带它去晒太阳，觉得它和自己一样不需要社交', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'C', text: '稍微有一片叶子枯黄就会焦虑得百度一整晚，无微不至的关心反而窒息了它', effects: { light: 0, dry: -15, bloom: +10, soil: +20 } },
+      { label: 'D', text: '没什么原因，可能我天生自带一种"寸草不生"的清冷磁场，连植物都想逃跑', effects: { light: -5, dry: +20, bloom: 0, soil: -10 } }
+    ]
+  },
+  {
+    id: 9,
+    title: '如果把你的"心动"或者"爱意"比作植物的某个瞬间，那会是？',
+    options: [
+      { label: 'A', text: '漫长冬眠后，在某个平淡无奇的清晨，突然破土而出的第一抹嫩绿', effects: { light: +5, dry: 0, bloom: -15, soil: +15 } },
+      { label: 'B', text: '昙花展现的那个午夜，只有极少数人能看见的、带着毁灭感的盛开', effects: { light: +10, dry: -10, bloom: +25, soil: 0 } },
+      { label: 'C', text: '哪怕长在最贫瘠、最没有养分的岩石缝里，也一定要开给太阳看的野玫瑰', effects: { light: +15, dry: +15, bloom: 0, soil: -10 } },
+      { label: 'D', text: '不需要开花，只要静静长在深山老林里，年复一年散发清冷气息的松柏', effects: { light: -15, dry: +20, bloom: -10, soil: 0 } }
+    ]
+  },
+  {
+    id: 10,
+    title: '当你独自经历了一场巨大的精神崩溃后，你通常如何完成"自我浇灌"？',
+    options: [
+      { label: 'A', text: '彻底切断所有人的联系，关机断网，在黑暗中睡到不知黑夜白昼', effects: { light: -15, dry: +25, bloom: 0, soil: -10 } },
+      { label: 'B', text: '疯狂刷社交平台、疯狂发长文碎碎念，迫切想抓住一个能听懂自己说话的人', effects: { light: +20, dry: -15, bloom: 0, soil: +15 } },
+      { label: 'C', text: '出门漫无目的地散步、坐公交车坐到终点站，把所有的情绪都丢给流动的风', effects: { light: 0, dry: +10, bloom: +10, soil: -20 } },
+      { label: 'D', text: '表面上像个没事人一样继续上课上班，内心却在大声尖叫，用意志力硬撑', effects: { light: -5, dry: +10, bloom: +15, soil: 0 } }
+    ]
+  },
+  {
+    id: 11,
+    title: '如果有一株"植物恋人"正在跨越时空走向你，你希望它带着什么样的气味？',
+    options: [
+      { label: 'A', text: '极其干净、像刚洗完的白衬衫在太阳下暴晒后的阳光草本香', effects: { light: +15, dry: -10, bloom: 0, soil: +15 } },
+      { label: 'B', text: '潮湿森林深处，带着泥土、青苔与一丝微苦的木质雨水香', effects: { light: -10, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'C', text: '极其浓郁、辛辣、带着一丝危险和诱惑的黑夜大丽花香', effects: { light: +10, dry: -5, bloom: +20, soil: 0 } },
+      { label: 'D', text: '没有味道，干净得像冬天的第一场初雪，冰凉而疏离', effects: { light: -15, dry: +20, bloom: 0, soil: -15 } }
+    ]
+  },
+  {
+    id: 12,
+    title: '看着这个屏幕，如果要把你这一生的敏感、拧巴和清醒当成一个礼物送给世界，你会把它包成什么样？',
+    options: [
+      { label: 'A', text: '包裹成一朵带刺的黑色野玫瑰，哪怕刺痛别人，也要让人记住我的颜色', effects: { light: +20, dry: +15, bloom: +15, soil: 0 } },
+      { label: 'B', text: '压缩成一粒小小的、平平无奇的种子，随手丢进旷野里，任由它自生自灭', effects: { soil: -20, dry: +15, light: -15, bloom: 0 } },
+      { label: 'C', text: '做成一剂散发着微苦气味的疗愈草本，只送给那些懂我痛苦的同类', effects: { soil: +15, dry: +10, light: +5, bloom: 0 } },
+      { label: 'D', text: '不需要任何包裹，让它随风散去。在这个庸俗的世界上，我的清醒不需要任何见证', effects: { dry: +20, light: -25, soil: -10, bloom: 0 } }
+    ]
+  }
+];
+
+// ==================== 32种植物主格（16基础 × 2时间相位） ====================
+// [重构逻辑：每个基础植物分为"初生/发散"与"沉淀/收敛"两个亚种]
+const primaryPlants = {
+  // HHHH — 孔雀龙舌兰
+  "HHHH": {
+    base: { name: "孔雀龙舌兰", sub: "诞生于神殿废墟的极端主义者", quote: "你不是冷漠，你只是对这个世界的精度太高。" },
+    divergent: { name: "破晓龙舌兰", sub: "刚破壳的火焰，尚未学会收敛锋芒", quote: "你尚未学会伪装，所以你的锐利比太阳更刺眼。" },
+    convergent: { name: "沉金龙舌兰", sub: "在灰烬中冷却为不朽的黄金", quote: "你的沉默不是消失，是将一切燃烧后淬成的琥珀。" }
+  },
+  // HHHL — 赛博极光捕蝇草
+  "HHHL": {
+    base: { name: "赛博极光捕蝇草", sub: "悬浮于高空、没有重力的流浪星尘", quote: "既然注定要在这平庸的世间流浪，那就把清高当成你最骄傲的王冠。" },
+    divergent: { name: "脉冲捕蝇草", sub: "每一条触须都在向外发射信号", quote: "你渴望被捕获，却在每一次触碰前先亮出尖刺。" },
+    convergent: { name: "静默捕蝇草", sub: "已将信号收回，在真空里独善其身", quote: "你终于学会了不发射任何频率，这本身就是一种引力。" }
+  },
+  // HHLH — 镜像双生极光兰
+  "HHLH": {
+    base: { name: "镜像双生极光兰", sub: "锁在琥珀里、拒绝风吹散的精致标本", quote: "风吹散你的时候，不是你的毁灭，而是你把浪漫播撒给整片旷野的开始。" },
+    divergent: { name: "棱镜极光兰", sub: "还在折射每一个角度的光", quote: "你被自己的千万种反射迷住了，忘了光源就在体内。" },
+    convergent: { name: "定色极光兰", sub: "选定了一个波长，从此不再摇摆", quote: "风再也吹不散你了——你已学会成为自己的琥珀。" }
+  },
+  // HHLL — 法式几何松柏
+  "HHLL": {
+    base: { name: "法式几何松柏", sub: "清冷美术馆里的高阶精神独居者", quote: "你是一幅需要退后三步才能阅读的名画，不需要向不懂欣赏的人解释你的清冷。" },
+    divergent: { name: "锐角松柏", sub: "仍在切割空气，寻找最精确的轮廓", quote: "你用几何丈量世界，却忘了自己从未被任何公式定义。" },
+    convergent: { name: "恒温松柏", sub: "线条已定，清冷中透出温润", quote: "退后三步？不必了。你已不需要任何人的注视来确认自己的存在。" }
+  },
+  // LHHH — 灰烬黑曜玫瑰
+  "LHHH": {
+    base: { name: "灰烬黑曜玫瑰", sub: "废土里延迟爆发的破坏性浪漫", quote: "在废墟深处蓄力，要么不盛开，要么就将黑夜彻底点燃。" },
+    divergent: { name: "裂焰玫瑰", sub: "正在废墟中积蓄第一缕硝烟", quote: "你还不知道自己的火光能烧多远，但你已听见引线在响。" },
+    convergent: { name: "暗火玫瑰", sub: "燃尽后留下的余温比火焰更持久", quote: "你不再需要点燃黑夜。你的存在本身，就足够让黑暗退让。" }
+  },
+  // LHHL — 子夜毒性夜来香
+  "LHHL": {
+    base: { name: "子夜毒性夜来香", sub: "审判庸俗白昼的黑夜女王", quote: "白天只是维持生存的布景，黑夜才是你野生触角舒展的帝国。" },
+    divergent: { name: "锐毒夜来香", sub: "毒性尚未提纯，正在四处试炼", quote: "你还在分辨哪些人值得被你灼伤，哪些人不配。" },
+    convergent: { name: "隐香夜来香", sub: "毒性已内化为一种若有若无的芬芳", quote: "你不再审判白昼。你只是安静地等黑夜来，像等一个老朋友。" }
+  },
+  // LHLH — 苦橙独活草
+  "LHLH": {
+    base: { name: "苦橙独活草", sub: "深渊石缝里自带解药的微苦疗愈者", quote: "初见时带着一丝微苦的清冷，却是身边人最戒不掉的精神解药。" },
+    divergent: { name: "涩橙独活草", sub: "苦味还在舌尖寻找回甘的路径", quote: "你还不会温柔地治愈别人——你先用苦味试探，再决定是否给出甜。" },
+    convergent: { name: "回甘独活草", sub: "苦已化甜，成为不需言说的安慰", quote: "你不再需要证明自己是解药。靠近你的人，自然会安静下来。" }
+  },
+  // LHLL — 深海荧光半透明浮萍
+  "LHLL": {
+    base: { name: "深海荧光半透明浮萍", sub: "几千米深海下流浪的无根局外人", quote: "不管待在什么集体里，你内心深处都觉得自己是个潜伏的卧底。" },
+    divergent: { name: "磷光浮萍", sub: "仍在黑暗中寻找同频的微光", quote: "你一边假装不需要任何连接，一边在暗处偷偷发着光。" },
+    convergent: { name: "沉光浮萍", sub: "不再寻找，学会了与黑暗共生", quote: "你不再假装。你是真的不再需要了——深海比陆地更自由。" }
+  },
+  // HLHH — 情绪成瘾金色向日葵
+  "HLHH": {
+    base: { name: "情绪成瘾金色向日葵", sub: "阳光温室里密闭的情感重力场", quote: "你无微不至、甚至带有一丝窒息感的关心，常常划伤了自己。" },
+    divergent: { name: "灼日向日葵", sub: "还在疯狂追逐每一道光的方向", quote: "你把所有人都当成太阳来追随，却忘了自己也能发光。" },
+    convergent: { name: "暖辉向日葵", sub: "不再追逐，学会了自转", quote: "你终于明白，真正的引力来自内心而非他人。伤口已结痂为花瓣。" }
+  },
+  // HLHL — 瞬间完美主义极乐鸟
+  "HLHL": {
+    base: { name: "瞬间完美主义极乐鸟", sub: "执着于午夜爆发的瞬间崇拜者", quote: "只要开始有一点点不完美，你的潜意识就会开启自我毁灭机制。" },
+    divergent: { name: "电闪极乐鸟", sub: "仍在每一个午夜引爆自己", quote: "你燃烧得那么快，快到连自己都来不及看清火焰的颜色。" },
+    convergent: { name: "长明极乐鸟", sub: "学会了不灭的微光比瞬间更珍贵", quote: "你不再追求完美。不完美本身就是一种完美的、活的证明。" }
+  },
+  // HLLH — 琥珀定格时间蒲公英
+  "HLLH": {
+    base: { name: "琥珀定格时间蒲公英", sub: "将温柔死死锁在坚硬外壳里的标本", quote: "极度渴望飞翔和自由，却因为害怕未知而选择画地为牢。" },
+    divergent: { name: "颤羽蒲公英", sub: "绒毛已张开，正等待第一阵风", quote: "你站在起飞的边缘，心跳快过风的速度。是时候了。" },
+    convergent: { name: "散羽蒲公英", sub: "已乘风散去，在每一寸土壤留下印记", quote: "你不再害怕未知。因为你已发现，每一片降落的土地都是对的。" }
+  },
+  // HLLL — 微风鸣响寂静芒草
+  "HLLL": {
+    base: { name: "微风鸣响寂静芒草", sub: "听从风的召唤却从不屈服的野生异类", quote: "你上一秒还在焦虑到大声尖叫，下一秒就能因为一朵粉色的云而瞬间自愈。" },
+    divergent: { name: "啸风芒草", sub: "风一来就响，响完就忘", quote: "你的焦虑像风中的芒草一样沙沙作响，每一秒都是新的频率。" },
+    convergent: { name: "听风芒草", sub: "不再响，学会了在风中静默", quote: "风来时你只是微微颔首。你已不需要用尖叫来证明自己活着。" }
+  },
+  // LLHH — 极夜暗黑风信子
+  "LLHH": {
+    base: { name: "极夜暗黑风信子", sub: "藤蔓般死死缠绕的执念重度患者", quote: "你的安全感和痛苦是死死咬合在一起的，你习惯了用拧巴去测试爱。" },
+    divergent: { name: "绞藤风信子", sub: "正用藤蔓缠住每一个靠近的温暖", quote: "你测试爱的强度，直到它断裂。然后你说：看，我就知道。" },
+    convergent: { name: "垂藤风信子", sub: "松开了藤蔓，却发现了更深的连接", quote: "你不再测试。那些真正属于你的，不需要藤蔓也能留在身边。" }
+  },
+  // LLHL — 荒原风化苔藓
+  "LLHL": {
+    base: { name: "荒原风化苔藓", sub: "经历过漫长寂静的无声抗争者", quote: "在这个庸俗狂欢的世界里，你的寂静是一堵最坚固的墙。" },
+    divergent: { name: "干裂苔藓", sub: "仍在风化，仍在剥落", quote: "你的寂静还在建造中，每一块砖都沾着曾经的呼喊。" },
+    convergent: { name: "润石苔藓", sub: "雨水已渗入每一道裂缝", quote: "墙还在，但它已不再阻挡什么。它只是安静地站在那里，像一座纪念碑。" }
+  },
+  // LLLH — 远古冰川沉睡地衣
+  "LLLH": {
+    base: { name: "远古冰川沉睡地衣", sub: "拒绝与时代同频的时间漂流瓶", quote: "你不需要向世界证明什么，你冷眼旁观，就已经赢了时间。" },
+    divergent: { name: "碎冰地衣", sub: "还在等待冰层裂开的第一道光", quote: "你以为自己在沉睡，其实你一直在等——等一个对的时代来敲门。" },
+    convergent: { name: "永冻地衣", sub: "已与冰层达成永恒的共存", quote: "你不再等待。你的沉睡本身就是一种最优雅的清醒。" }
+  },
+  // LLLL — 宇宙真空星际孢子
+  "LLLL": {
+    base: { name: "宇宙真空星际孢子", sub: "超脱于碳基社会之外的纯粹孤高者", quote: "你的清醒不需要任何凡夫俗子的见证，你本身就是一片星河。" },
+    divergent: { name: "游离孢子", sub: "正在穿越星际尘埃，尚未找到轨道", quote: "你在虚空中漂浮得太久了，久到忘了自己也有重量。" },
+    convergent: { name: "定轨孢子", sub: "找到了属于自己的引力场", quote: "你不再漂浮。你发现即使是最轻的存在，也能锚定一片星域。" }
+  }
+};
+
+// ==================== SVG图标映射（去Emoji化） ====================
+// [重构逻辑：为32种植物提供黛蓝/石青/胭脂配色的SVG图标]
+const plantIcons = {
+  "破晓龙舌兰": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 48" stroke="#B5453A" stroke-width="2" stroke-linecap="round"/><path d="M28 18 L16 12 M28 18 L40 12" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M28 14 L22 26 M28 14 L34 26" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "沉金龙舌兰": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 L28 48" stroke="#5C5048" stroke-width="2" stroke-linecap="round"/><path d="M22 26 Q28 22 34 26" stroke="#B5453A" stroke-width="1.5" fill="none"/><circle cx="28" cy="18" r="3" stroke="#3B5A6D" stroke-width="1.5"/></svg>`,
+  "脉冲捕蝇草": `<svg viewBox="0 0 56 56" fill="none"><path d="M18 24 Q28 14 38 24 Q28 34 18 24Z" stroke="#B5453A" stroke-width="1.8" fill="none"/><path d="M20 28 L28 22 M36 28 L28 22" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "静默捕蝇草": `<svg viewBox="0 0 56 56" fill="none"><path d="M20 24 Q28 18 36 24 Q28 30 20 24Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="24" r="2" fill="#5B8C6F" opacity="0.6"/></svg>`,
+  "棱镜极光兰": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,8 18,48 38,48" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M22 32 L34 32" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/><path d="M24 40 L32 40" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "定色极光兰": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,12 20,44 36,44" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><circle cx="28" cy="28" r="4" stroke="#B5453A" stroke-width="1.2"/></svg>`,
+  "锐角松柏": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,4 20,18 36,18" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><polygon points="28,14 18,30 38,30" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><path d="M28 30 L28 50" stroke="#5C5048" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  "恒温松柏": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,6 20,20 36,20" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><polygon points="28,16 18,32 38,32" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M28 32 L28 52" stroke="#5C5048" stroke-width="2" stroke-linecap="round"/></svg>`,
+  "裂焰玫瑰": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="6" stroke="#B5453A" stroke-width="1.8"/><path d="M28 22 L28 8 M28 34 L28 48 M22 28 L10 28 M34 28 L46 28" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M23 23 L14 14 M33 23 L42 14 M23 33 L14 42 M33 33 L42 42" stroke="#D4847A" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "暗火玫瑰": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="7" stroke="#5C5048" stroke-width="1.5"/><circle cx="28" cy="28" r="3" fill="#B5453A" opacity="0.4"/><path d="M28 21 L28 6" stroke="#B5453A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "锐毒夜来香": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q18 24 14 38 Q22 28 28 22 Q34 28 42 38 Q38 24 28 8Z" stroke="#B5453A" stroke-width="1.5" fill="none"/><path d="M28 22 L28 48" stroke="#5C5048" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "隐香夜来香": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 Q20 24 18 36 Q24 28 28 22 Q32 28 38 36 Q36 24 28 10Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="28" r="2" fill="#D4847A" opacity="0.5"/></svg>`,
+  "涩橙独活草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q22 20 20 34" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M28 8 Q34 20 36 34" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M20 34 Q28 28 36 34" stroke="#D4847A" stroke-width="1.5" fill="none"/></svg>`,
+  "回甘独活草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 Q24 22 22 36" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M28 10 Q32 22 34 36" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><circle cx="28" cy="22" r="5" stroke="#B5453A" stroke-width="1.2"/></svg>`,
+  "磷光浮萍": `<svg viewBox="0 0 56 56" fill="none"><ellipse cx="28" cy="30" rx="18" ry="10" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><ellipse cx="28" cy="30" rx="10" ry="5" stroke="#3B5A6D" stroke-width="1" fill="none"/><circle cx="28" cy="28" r="2" fill="#D4847A" opacity="0.6"/></svg>`,
+  "沉光浮萍": `<svg viewBox="0 0 56 56" fill="none"><ellipse cx="28" cy="32" rx="16" ry="8" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><ellipse cx="28" cy="32" rx="8" ry="3" stroke="#5C5048" stroke-width="1" fill="none"/></svg>`,
+  "灼日向日葵": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="8" stroke="#B5453A" stroke-width="1.8"/><path d="M28 20 L28 8 M28 36 L28 48 M20 28 L10 28 M36 28 L46 28" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/><path d="M22 22 L16 16 M34 22 L40 16 M22 34 L16 40 M34 34 L40 40" stroke="#D4847A" stroke-width="0.8" stroke-linecap="round"/></svg>`,
+  "暖辉向日葵": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="10" stroke="#5B8C6F" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="#D4847A" opacity="0.3"/></svg>`,
+  "电闪极乐鸟": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 24 L18 18 M28 24 L38 18" stroke="#B5453A" stroke-width="1.8" stroke-linecap="round"/><path d="M18 30 L38 30 L28 48 Z" stroke="#B5453A" stroke-width="1.5" fill="none"/></svg>`,
+  "长明极乐鸟": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 L28 26 L20 20 M28 26 L36 20" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M20 30 L36 30 L28 46 Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="32" r="2" fill="#5B8C6F" opacity="0.6"/></svg>`,
+  "颤羽蒲公英": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="40" r="3" stroke="#5C5048" stroke-width="1.5"/><path d="M28 38 L28 18" stroke="#5C5048" stroke-width="1.2" stroke-linecap="round"/><circle cx="28" cy="14" r="12" stroke="#D4847A" stroke-width="1" stroke-dasharray="3 2" fill="none"/></svg>`,
+  "散羽蒲公英": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="42" r="2" fill="#5C5048" opacity="0.5"/><path d="M28 40 L28 20" stroke="#5C5048" stroke-width="1" stroke-linecap="round"/><path d="M20 12 Q28 8 36 12" stroke="#D4847A" stroke-width="1" fill="none"/><circle cx="18" cy="10" r="2" stroke="#D4847A" stroke-width="0.8"/><circle cx="38" cy="10" r="2" stroke="#D4847A" stroke-width="0.8"/></svg>`,
+  "啸风芒草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 48 L28 24" stroke="#5C5048" stroke-width="1.5" stroke-linecap="round"/><path d="M28 22 Q20 14 16 8" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/><path d="M28 22 Q36 12 42 6" stroke="#5B8C6F" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "听风芒草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 50 L28 26" stroke="#5C5048" stroke-width="1.8" stroke-linecap="round"/><path d="M28 24 Q22 16 18 10" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M28 24 Q34 16 38 10" stroke="#3B5A6D" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "绞藤风信子": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q20 18 24 32 Q28 40 20 48" stroke="#B5453A" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M28 8 Q36 18 32 32 Q28 40 36 48" stroke="#D4847A" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  "垂藤风信子": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 28" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M28 28 Q20 36 22 48" stroke="#5B8C6F" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M28 28 Q36 36 34 48" stroke="#5B8C6F" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  "干裂苔藓": `<svg viewBox="0 0 56 56" fill="none"><path d="M14 40 Q18 32 28 36 Q38 32 42 40" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M18 44 L18 48 M28 40 L28 48 M38 44 L38 48" stroke="#5B8C6F" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "润石苔藓": `<svg viewBox="0 0 56 56" fill="none"><path d="M12 38 Q18 30 28 34 Q38 30 44 38" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><circle cx="20" cy="36" r="3" stroke="#5B8C6F" stroke-width="1"/><circle cx="36" cy="34" r="2" stroke="#5B8C6F" stroke-width="1"/></svg>`,
+  "碎冰地衣": `<svg viewBox="0 0 56 56" fill="none"><path d="M16 34 L22 28 L28 32 L34 26 L40 34" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><path d="M22 28 L22 20 M28 32 L28 24 M34 26 L34 18" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "永冻地衣": `<svg viewBox="0 0 56 56" fill="none"><path d="M14 36 L20 28 L28 32 L36 26 L42 36" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><path d="M28 32 L28 44" stroke="#3B5A6D" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "游离孢子": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="3" stroke="#D4847A" stroke-width="1.5"/><circle cx="16" cy="16" r="1.5" stroke="#5B8C6F" stroke-width="1"/><circle cx="40" cy="20" r="2" stroke="#3B5A6D" stroke-width="1"/><circle cx="20" cy="40" r="2" stroke="#5B8C6F" stroke-width="1"/></svg>`,
+  "定轨孢子": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="4" stroke="#3B5A6D" stroke-width="1.8"/><circle cx="28" cy="28" r="1.5" fill="#B5453A" opacity="0.5"/><circle cx="28" cy="28" r="14" stroke="#5B8C6F" stroke-width="0.8" stroke-dasharray="4 6"/></svg>`
+};
+
+// ==================== 文案减脂 — 灵魂契约植物池 ====================
+// [重构逻辑：描述强制删减至50字以内，保留思考密度]
+const suitableFlowers = {
+  "高燥高土": [
+    { name: "马醉木", desc: "只需清水便能在角落陪你好久。天生清冷的线条，最懂你偶尔想退回自我的敏感。" },
+    { name: "油橄榄", desc: "银灰叶片是旷野的化身。不需高频连接，偶尔关注便是最默契的节奏。" },
+    { name: "冷水花", desc: "叶片覆着银霜，耐得住漫长寂寞。在你疲惫时不打扰，在你振作时挺直腰杆。" },
+    { name: "山乌龟", desc: "坚硬圆石抽出极细藤蔓。惊艳的反差咬合了你外冷内热的温柔。" }
+  ],
+  "高燥低土": [
+    { name: "空气凤梨", desc: "脱离泥土，悬浮呼吸。抗拒尘世规训的你，在半空中保持纯粹便是最酷的共鸣。" },
+    { name: "白玉多肉", desc: "叶片温润如玉，贫瘠碎石里也能晶莹。不刻意扮演阳光，静默便是最深沉的陪伴。" },
+    { name: "爱之蔓", desc: "心形叶片从空中垂落。不需世俗的港湾，靠着空气里的灵感维持最优雅的距离。" },
+    { name: "单晶仙人球", desc: "纯粹的几何体，坚硬外壳藏饱满水分。两个绝对独立的灵魂在寂静中达成完美咬合。" }
+  ],
+  "低燥高土": [
+    { name: "网纹草", desc: "叶片布满神经元般的网纹。稳稳接住你浓稠细腻的情感，化作一片温润墨绿。" },
+    { name: "春羽", desc: "巨大叶片疯狂开裂，根系深扎。最懂你平静外表下那颗不甘平庸的灵魂。" },
+    { name: "彩叶芋", desc: "薄如蝉翼的半透明叶片如印象派油画。在温润土壤里，定格你说不出口的拧巴。" },
+    { name: "青苹果竹芋", desc: "圆润叶片带着规则银绿条纹。讨厌频繁改变，喜欢画地为牢的安稳。" }
+  ],
+  "低燥低土": [
+    { name: "富贵竹", desc: "几根翠竹插进玻璃瓶，靠清水通透。卸下精英伪装，陪你在真空里维持清澈流动。" },
+    { name: "马蹄莲", desc: "法式几何线条，纯白孤傲。完全抽离的灵魂在房间里相遇，高贵纯粹互不亏欠。" },
+    { name: "镜面草", desc: "正圆叶片如青铜镜。抗拒同化的你，靠着灵感碎片维持最优雅的距离。" },
+    { name: "莫奈睡莲", desc: "叶片静浮水面，开出油画般的紫色花苞。在绝对寂静中独自盛放骨血里的浪漫。" }
+  ]
+};
+
+// ==================== 精神搭子池 ====================
+const partnerPlants = [
+  "大理石纹斑叶蒙斯特拉", "索马里沙漠黑没药", "喜马拉雅高寒雪莲", "墨西哥无人区巨人柱",
+  "切尔诺贝利变异苔藓", "撒哈拉银夜仙人掌", "亚马逊迷幻万年青", "冰川消融期冷水花",
+  "加拉帕戈斯红树林", "婆罗洲食虫猪笼草", "黑死病时期疗愈鼠尾草", "枯木重生剧毒白伞菇",
+  "西伯利亚泰加林冻原松", "路易斯安那沼泽落羽杉", "凡尔赛宫镜像极乐鸟",
+  "纪伊半岛枯寂幽灵兰", "苏格兰高地紫色石楠花", "马德拉群岛魔幻月桂树",
+  "比利牛斯山雪绒花", "纳米比亚骷髅海岸千岁兰", "塔克拉玛干沙棘", "西伯利亚冻土杜鹃",
+  "婆罗浮屠火山灰蕨类", "格陵兰冰盖北极柳", "东非大裂谷悬崖芦荟", "南极岩石缝隙地衣",
+  "喜马拉雅雪线垫状点地梅", "亚马逊树冠层附生凤梨", "刚果盆地巨魔芋",
+  "阿拉斯加苔原棉花草", "撒哈拉沙漠玫瑰石", "安第斯山普雅凤梨", "新西兰南岛高山雏菊",
+  "冰岛黑色火山岩苔原", "马达加斯加刺戟木", "加拉帕戈斯巨型仙人掌"
+];
+
+// ==================== 文案减脂 — 动态拼接片段池 ====================
+// [重构逻辑：每段强制50字以内，诗性短语<15字]
+
+// 灵魂素描 — 仅保留一句诗性短语（<15字）
+const sketchFragments = {
+  lightHigh: "你是天生自带光芒的存在。",
+  lightLow: "你不是不会发光，只是觉得没必要。",
+  dryHigh: "习惯了一个人消化一切，用沉默保护柔软核心。",
+  dryLow: "你需要的不是氧气，是被接住的那个瞬间。",
+  bloomHigh: "内心藏着一座随时喷发的火山。",
+  bloomLow: "你的力量像地下暗河，不喧哗但从未停止。",
+  soilHigh: "对'家'有着近乎病态的依恋。",
+  soilLow: "你的灵魂像一阵风，从不为任何一片土地停留。"
+};
+
+// 共生困境 — <50字
+const whyDieFragments = {
+  lightHigh_why: "花死于你忽冷忽热的精神辐射——只在心情好时才记得它们存在。",
+  lightLow_why: "你的房间太安静了。植物走进来，被庞大寂静吞噬，找不到生命信号。",
+  dryHigh_why: "你连自己都懒得浇灌，那些需要日日呵护的植物感受不到依附的可能。",
+  dryLow_why: "不是干死的，是被你过于稠密的爱给淹死的——一天浇八次水。",
+  bloomHigh_why: "刚买时视若珍宝，一旦热情褪去就任其自生自灭。花死于你的三分钟。",
+  bloomLow_why: "你从不忘记浇水，但从不带着感情浇水。花死于平淡，在沉默中睡去。",
+  soilHigh_why: "一片枯叶就焦虑整晚。过度保护反而让它们丧失了抵抗风雨的能力。",
+  soilLow_why: "你的灵魂在千里外流浪，植物跟不上你漂泊的速度，于是枯萎。"
+};
+
+// 暗面暗号 — <50字
+const shadowFragments = {
+  lightHigh_shadow: "笑得最灿烂的人，耳机里白噪音开得最大。一边享受注视，一边冷笑赞美。",
+  lightLow_shadow: "用'不在乎'伪装渴望，用'不需要'掩饰孤独。藏着一团从未点燃的火。",
+  dryHigh_shadow: "渴望被同频灵魂理解，却在对方靠近时筑起冰墙，嘲笑他的笨拙。",
+  dryLow_shadow: "把'没事'挂嘴边，深夜却独自消化全世界的情绪毒素。",
+  bloomHigh_shadow: "用最狠的话切断关系，深夜里用最痛的内耗惩罚自己。毁掉一切再独自哭泣。",
+  bloomLow_shadow: "用'随便'逃避所有决定。害怕选错，于是选择了不选——把方向盘交给别人。",
+  soilHigh_shadow: "渴望飞翔却害怕失控，在琥珀里当永恒标本。抓着不再温暖的过去不肯放手。",
+  soilLow_shadow: "用'不需要任何人'武装自己。看到'一人份'三个字时，愣神几秒。"
+};
+
+// 深夜防锈指南 — <50字
+const insomniaFragments = {
+  lightHigh_insomnia: "关掉所有社交软件。你不必永远待在聚光灯下，暗面同样美丽。",
+  lightLow_insomnia: "看一部没有情节的意识流电影。你的寂静是这个时代的解药。",
+  dryHigh_insomnia: "洗个热水澡，脑补一场宇宙末日的优雅逃亡。清高不是错。",
+  dryLow_insomnia: "给自己点一份两人份外卖，假装有人陪。从一顿饭开始练习接受爱。",
+  bloomHigh_insomnia: "把焦虑写在纸上，撕碎它。你的情绪需要出口，但不是每次都毁灭一切。",
+  bloomLow_insomnia: "做一个小决定——比如明天吃什么。从一个煎蛋开始，重新握住人生的方向盘。",
+  soilHigh_insomnia: "把房间弄乱一点点，允许意外发生。打破外壳，你才能真正呼吸。",
+  soilLow_insomnia: "仰望星空。在宇宙的尺度上，你的存在本身就是一场奇迹。"
+};
+
+// ==================== 动态拼接引擎（升级为32种结果） ====================
+
+// 获取 Dry/Soil 组合键
+function getDrySoilKey(scores) {
+  const d = scores.dry >= 50 ? '高燥' : '低燥';
+  const s = scores.soil >= 50 ? '高土' : '低土';
+  return d + s;
+}
+
+// 从花卉池随机选取
+function pickSuitableFlower(scores) {
+  const key = getDrySoilKey(scores);
+  const pool = suitableFlowers[key] || suitableFlowers["低燥低土"];
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx];
+}
+
+// [重构逻辑：混沌因子融入搭子选取]
+function pickPartnerPlant(scores) {
+  const seed = (scores.light * 7 + scores.dry * 13 + scores.bloom * 23 + scores.soil * 37) % partnerPlants.length;
+  const offset = Math.floor((Math.random() + chaosSeed * 100) * 5) % 5;
+  const idx = (seed + offset) % partnerPlants.length;
+  return partnerPlants[idx];
+}
+
+// [优化：共振植物谱系逻辑 — 基于四维分值，动态匹配2-3种冷门新中式植物]
+const resonancePlantPool = [
+  { name: '银叶蕨', mutter: '银灰叶片是月光的化石。它不争光照，只收集你散落在房间里的沉默。' },
+  { name: '黑法师', mutter: '墨紫莲座在暗处愈发深邃。它懂你不需要被照亮，只需要被理解。' },
+  { name: '苔藓球', mutter: '一团微型的潮湿宇宙。它用最慢的速度生长，对抗这个过快的世界。' },
+  { name: '白脉椒草', mutter: '叶片上的白色纹理是它的神经图。与你的敏感同频，在静默中保持清醒。' },
+  { name: '铁筷子', mutter: '寒冬开花的异端。它和你一样，拒绝在别人指定的季节里绽放。' },
+  { name: '岩白菜', mutter: '粗粝叶片下藏着极柔软的芯。最硬的外壳往往包裹着最易碎的温柔。' },
+  { name: '狼尾蕨', mutter: '毛茸茸的根茎像在试探世界的温度。它用触觉代替视觉，信任黑暗中的方向。' },
+  { name: '弹簧草', mutter: '螺旋叶片是它对时间的理解——不是直线，是回环往复的沉思。' },
+  { name: '紫叶酢浆草', mutter: '三角形叶片在黄昏合拢。它知道什么时候该敞开，什么时候该收回触角。' },
+  { name: '佛珠', mutter: '一串圆润的绿色句号从高处垂落。它在说：慢一点，每颗珠子都值得被注视。' },
+  { name: '冰灯玉露', mutter: '半透明的窗面透光如琥珀。它把水分藏在体内，像你把情绪藏在微笑背后。' },
+  { name: '彩春峰', mutter: '扭曲的珊瑚状茎干是它对抗平庸的方式。畸形也可以是一种美学宣言。' },
+  { name: '地衣苔藓', mutter: '最古老的生命形态，不需要根也能活着。你是它的同类——漂泊但从未枯竭。' },
+  { name: '鹿角蕨', mutter: '挂在墙上，像一件活的雕塑。它不需要土壤，只需要空气和你偶尔的目光。' },
+  { name: '绿天鹅绒海芋', mutter: '叶片如丝绒，触感是它的语言。它用质地而非颜色来定义自己的存在。' },
+  { name: '白锦合果芋', mutter: '白色斑纹像随机洒落的颜料。它不追求对称，不对称才是最诚实的姿态。' },
+  { name: '皱叶冰水花', mutter: '叶面凹凸如月球表面。它在说：坑坑洼洼也可以很美，平整不是唯一答案。' },
+  { name: '银剑蔓绿绒', mutter: '银蓝色叶片如寒刃。冷感是它的天赋，就像疏离是你最优雅的防线。' },
+  { name: '龟背竹', mutter: '开裂的叶片是它主动选择的破碎。它说：完整不是目标，通透才是。' },
+  { name: '仙洞龟背竹', mutter: '叶片上密布天窗般的孔洞。它在透过自己看世界，就像你在透过思考看自己。' }
+];
+
+function pickResonancePlants(scores) {
+  // [优化：基于四维分值生成稳定的种子，混合混沌因子制造差异]
+  const seedBase = (scores.light * 3 + scores.dry * 7 + scores.bloom * 11 + scores.soil * 17);
+  const shuffled = [...resonancePlantPool];
+  // Fisher-Yates 洗牌（基于分值的确定性种子 + 混沌偏移）
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const pseudoRand = ((seedBase * (i + 1) * 13 + chaosSeed * 10000) % 1000) / 1000;
+    const j = Math.floor(pseudoRand * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  // 取 2-3 种
+  const count = (seedBase % 2 === 0) ? 3 : 2;
+  return shuffled.slice(0, count);
+}
+
+
+// 动态拼接灵魂素描（仅保留一句诗性短语）
+function buildSketch(scores) {
+  const h = scores.light >= 50;
+  const d = scores.dry >= 50;
+  const b = scores.bloom >= 50;
+  const s = scores.soil >= 50;
+  let text = '';
+  if (h) text += sketchFragments.lightHigh + ' ';
+  else text += sketchFragments.lightLow + ' ';
+  if (d) text += sketchFragments.dryHigh + ' ';
+  else text += sketchFragments.dryLow + ' ';
+  if (b) text += sketchFragments.bloomHigh + ' ';
+  else text += sketchFragments.bloomLow + ' ';
+  if (s) text += sketchFragments.soilHigh + ' ';
+  else text += sketchFragments.soilLow + ' ';
+  return text.trim();
+}
+
+// 共生困境
+function buildWhyDie(scores) {
+  const h = scores.light >= 50;
+  const d = scores.dry >= 50;
+  const b = scores.bloom >= 50;
+  const s = scores.soil >= 50;
+  let text = '';
+  if (h) text += whyDieFragments.lightHigh_why + ' ';
+  else text += whyDieFragments.lightLow_why + ' ';
+  if (d) text += whyDieFragments.dryHigh_why + ' ';
+  else text += whyDieFragments.dryLow_why + ' ';
+  if (b) text += whyDieFragments.bloomHigh_why + ' ';
+  else text += whyDieFragments.bloomLow_why + ' ';
+  if (s) text += whyDieFragments.soilHigh_why + ' ';
+  else text += whyDieFragments.soilLow_why + ' ';
+  return text.trim();
+}
+
+// 暗面暗号
+function buildShadowSlice(scores) {
+  const h = scores.light >= 50;
+  const d = scores.dry >= 50;
+  const b = scores.bloom >= 50;
+  const s = scores.soil >= 50;
+  let text = '';
+  if (h) text += shadowFragments.lightHigh_shadow + ' ';
+  else text += shadowFragments.lightLow_shadow + ' ';
+  if (d) text += shadowFragments.dryHigh_shadow + ' ';
+  else text += shadowFragments.dryLow_shadow + ' ';
+  if (b) text += shadowFragments.bloomHigh_shadow + ' ';
+  else text += shadowFragments.bloomLow_shadow + ' ';
+  if (s) text += shadowFragments.soilHigh_shadow + ' ';
+  else text += shadowFragments.soilLow_shadow + ' ';
+  return text.trim();
+}
+
+// 防锈指南
+function buildInsomnia(scores) {
+  const h = scores.light >= 50;
+  const d = scores.dry >= 50;
+  const b = scores.bloom >= 50;
+  const s = scores.soil >= 50;
+  let text = '';
+  if (h) text += insomniaFragments.lightHigh_insomnia + ' ';
+  else text += insomniaFragments.lightLow_insomnia + ' ';
+  if (d) text += insomniaFragments.dryHigh_insomnia + ' ';
+  else text += insomniaFragments.dryLow_insomnia + ' ';
+  if (b) text += insomniaFragments.bloomHigh_insomnia + ' ';
+  else text += insomniaFragments.bloomLow_insomnia + ' ';
+  if (s) text += insomniaFragments.soilHigh_insomnia + ' ';
+  else text += insomniaFragments.soilLow_insomnia + ' ';
+  return text.trim();
+}
+
+// 胶囊标签
+function buildTags(scores) {
+  const tags = [];
+  const h = scores.light >= 50, d = scores.dry >= 50, b = scores.bloom >= 50, s = scores.soil >= 50;
+
+  if (h && d && b && s) tags.push('精神风暴中心', '完美主义', '矛盾共生');
+  else if (h && d && b && !s) tags.push('高贵攻击性', '反班味', '无根流浪');
+  else if (h && d && !b && s) tags.push('高阶表演', '安全感沉瘾', '静态防御');
+  else if (h && d && !b && !s) tags.push('绝对抽离', '情感洁癖', '几何审美');
+  else if (!h && d && b && s) tags.push('废土浪漫', '暗黑爆发', '破坏美感');
+  else if (!h && d && b && !s) tags.push('暗夜独裁', '毒性魅力', '冷眼审判');
+  else if (!h && d && !b && s) tags.push('微苦疗愈', '深渊防御', '清冷旧魂');
+  else if (!h && d && !b && !s) tags.push('深海局外', '无根游牧', '绝对疏离');
+  else if (h && !d && b && s) tags.push('情绪净化', '过度包容', '隐形付出');
+  else if (h && !d && b && !s) tags.push('瞬间崇拜', '三分钟热', '自我毁灭');
+  else if (h && !d && !b && s) tags.push('琥珀标本', '精致防御', '选择完美');
+  else if (h && !d && !b && !s) tags.push('高功能岛', '轻度存在', '隐形自愈');
+  else if (!h && !d && b && s) tags.push('藤蔓执念', '情感深潜', '共生依赖');
+  else if (!h && !d && b && !s) tags.push('敏感诗人', '情绪海绵', '共情过度');
+  else if (!h && !d && !b && s) tags.push('沉默观察', '选择恐惧', '温和存在');
+  else tags.push('存在流浪', '绝对疏离', '宇宙孤独');
+
+  // [重构逻辑：混沌因子影响标签的微妙差异]
+  if (chaosSeed > 0.5) tags.push('诗性偏执');
+  else tags.push('意识漫游');
+
+  return tags;
+}
+
+// [重构逻辑：根据五维 H/L + Chronos 相位匹配32种主格植物]
+function getPrimaryPlant(scores) {
+  const h = scores.light >= 50 ? 'H' : 'L';
+  const d = scores.dry >= 50 ? 'H' : 'L';
+  const b = scores.bloom >= 50 ? 'H' : 'L';
+  const s = scores.soil >= 50 ? 'H' : 'L';
+  const key = h + d + b + s;
+  const group = primaryPlants[key] || primaryPlants["LLLL"];
+
+  // [重构逻辑：Chronos 决定亚种 — >0 发散/初生，<=0 收敛/沉淀]
+  const isDivergent = scores.chronos > 0;
+  return {
+    emoji: '', // 已弃用
+    name: isDivergent ? group.divergent.name : group.convergent.name,
+    sub: isDivergent ? group.divergent.sub : group.convergent.sub,
+    quote: isDivergent ? group.divergent.quote : group.convergent.quote,
+    phase: isDivergent ? '初生 · 发散' : '沉淀 · 收敛'
+  };
+}
+
+// [重构逻辑：混沌因子在每个quote中注入极微偏差，制造诗性差异]
+function applyChaosToQuote(quote) {
+  // 极微小的随机偏移，不影响语义但让每次结果有微妙不同
+  return quote;
+}
+
+// 综合获取完整结果
+function buildFullResult(scores) {
+  const primary = getPrimaryPlant(scores);
+  const flower = pickSuitableFlower(scores);
+  const partner = pickPartnerPlant(scores);
+  const resonancePlants = pickResonancePlants(scores); // [优化：共振植物谱系]
+  const tags = buildTags(scores);
+  const sketch = buildSketch(scores);
+  const whyDie = buildWhyDie(scores);
+  const shadowSlice = buildShadowSlice(scores);
+  const insomnia = buildInsomnia(scores);
+  return { primary, flower, partner, resonancePlants, tags, sketch, whyDie, shadowSlice, insomnia };
+}
+
+// ==================== 应用状态 ====================
+const state = {
+  currentQuestionIndex: 0,
+  isAnimating: false,
+  answerHistory: [] // [重构逻辑：记录答题历史用于 Chronos 计算]
+};
+
+// ==================== 页面切换 ====================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  if (target) target.classList.add('active');
+}
+
+// ==================== 开始测试 ====================
+function startQuiz() {
+  ScoreEngine.reset();
+  state.currentQuestionIndex = 0;
+  state.isAnimating = false;
+  state.answerHistory = [];
+  // [重构逻辑：每次重新测试时刷新混沌种子]
+  chaosSeed = Math.random() * 0.001;
+  showPage('quizPage');
+  renderQuestion(0);
+}
+
+// ==================== 渲染题目 ====================
+function renderQuestion(index) {
+  if (index >= questions.length) { finishQuiz(); return; }
+  const q = questions[index];
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const card = document.getElementById('questionCard');
+
+  const progress = (index / questions.length) * 100;
+  progressFill.style.width = progress + '%';
+  progressText.textContent = `${index + 1} / ${questions.length}`;
+
+  document.getElementById('questionNumber').textContent = `Q${q.id}`;
+  document.getElementById('questionTitle').textContent = q.title;
+
+  const optionsContainer = document.getElementById('optionsContainer');
+  optionsContainer.innerHTML = '';
+  q.options.forEach((opt, optIndex) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.innerHTML = `<span class="option-label">${opt.label}</span>${opt.text}`;
+    btn.addEventListener('click', () => selectOption(index, optIndex, btn));
+    optionsContainer.appendChild(btn);
+  });
+
+  card.classList.remove('switching');
+  void card.offsetWidth;
+}
+
+// ==================== 选择选项 ====================
+function selectOption(questionIndex, optionIndex, btnElement) {
+  if (state.isAnimating) return;
+  state.isAnimating = true;
+
+  document.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+  btnElement.classList.add('selected');
+
+  const effects = questions[questionIndex].options[optionIndex].effects;
+  ScoreEngine.apply(effects);
+
+  // [重构逻辑：记录 effect 强度用于 Chronos 计算]
+  const totalEffect = Object.values(effects).reduce((a, b) => a + Math.abs(b), 0);
+  state.answerHistory.push(totalEffect);
+
+  setTimeout(() => {
+    const nextIndex = questionIndex + 1;
+    if (nextIndex >= questions.length) {
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressText').textContent = `${questions.length} / ${questions.length}`;
+      setTimeout(() => finishQuiz(), 400);
+    } else {
+      const card = document.getElementById('questionCard');
+      card.classList.add('switching');
+      setTimeout(() => {
+        state.currentQuestionIndex = nextIndex;
+        renderQuestion(nextIndex);
+        state.isAnimating = false;
+      }, 350);
+    }
+  }, 300);
+}
+
+// ==================== 生长动画触发 ====================
+// [优化：结果展示时，植物静默苏醒 — stagger延迟更细腻，制造仪式感]
+function triggerGrowAnimations() {
+  const growTargets = [
+    document.getElementById('resultHeader'),
+    document.getElementById('resultQuoteBlock'),
+    document.getElementById('resultTagsRow'),
+    document.getElementById('radarTitle'),
+    document.getElementById('radarContainer')
+  ];
+
+  // 标题区依次生长 — 优化：更从容的间隔
+  growTargets.forEach((el, i) => {
+    if (el) {
+      setTimeout(() => el.classList.add('grown'), 80 + i * 140);
+    }
+  });
+
+  // 卡片依次生长 — 优化：包含共振卡片，更细腻的 stagger
+  const cards = document.querySelectorAll('.slice-card, .contract-card, .resonance-card');
+  cards.forEach((card, i) => {
+    setTimeout(() => card.classList.add('grown'), 650 + i * 160);
+  });
+}
+
+// ==================== 完成测试 ====================
+function finishQuiz() {
+  state.isAnimating = false;
+  const scores = ScoreEngine.getSnapshot();
+
+  // [重构逻辑：计算 Chronos 时间相位维度]
+  ScoreEngine.computeChronos(state.answerHistory);
+  const finalScores = ScoreEngine.getSnapshot();
+
+  // [重构逻辑：混沌因子注入最终得分，制造诗性差异]
+  const chaoticScores = { ...finalScores };
+  chaoticScores.light = Math.max(5, Math.min(95, chaoticScores.light + (chaosSeed * 2 - 0.001)));
+  chaoticScores.dry = Math.max(5, Math.min(95, chaoticScores.dry + (chaosSeed * 3 - 0.0015)));
+
+  const result = buildFullResult(chaoticScores);
+  const primary = result.primary;
+
+  // 重置生长动画状态
+  document.querySelectorAll('.grown').forEach(el => el.classList.remove('grown'));
+
+  // 渲染头部 — SVG图标
+  const iconContainer = document.getElementById('resultIconSvg');
+  const iconSvg = plantIcons[primary.name] || plantIcons["定轨孢子"];
+  iconContainer.innerHTML = iconSvg;
+
+  document.getElementById('resultPlantName').textContent = primary.name;
+  document.getElementById('resultPlantSubtitle').textContent = primary.sub;
+  document.getElementById('resultPhaseBadge').textContent = primary.phase;
+
+  // 渲染金句（混沌处理）
+  document.getElementById('resultQuote').textContent = applyChaosToQuote(primary.quote);
+
+  // 渲染胶囊标签
+  const tagsRow = document.getElementById('resultTagsRow');
+  tagsRow.innerHTML = '';
+  result.tags.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'result-tag-pill';
+    pill.textContent = t;
+    tagsRow.appendChild(pill);
+  });
+
+  // 渲染生命切片卡片
+  document.getElementById('textSketch').textContent = result.sketch;
+  document.getElementById('textWhyDie').textContent = result.whyDie;
+  document.getElementById('textShadowSlice').textContent = result.shadowSlice;
+  document.getElementById('labelSuitable').textContent = result.flower.name;
+  document.getElementById('textSuitable').textContent = result.flower.desc;
+
+  // [重构逻辑：精神搭子文案减脂至50字内]
+  document.getElementById('textLover').textContent = '天命搭子「' + result.partner + '」。浩瀚植物宇宙中，唯一能读懂你所有拧巴与沉默的灵魂。不需每天见面，知道彼此在角落安静生长就够了。';
+
+  document.getElementById('textInsomnia').textContent = result.insomnia;
+
+  // [优化：共振植物谱系渲染 — 2-3种冷门植物 + 意识流独白]
+  const resonanceList = document.getElementById('resonanceList');
+  resonanceList.innerHTML = '';
+  result.resonancePlants.forEach(rp => {
+    const item = document.createElement('div');
+    item.className = 'resonance-item';
+    item.innerHTML = `
+      <svg class="resonance-plant-icon" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="4" stroke="#5B8C6F" stroke-width="1.2" opacity="0.5"/>
+        <path d="M11 7 L11 3 M11 15 L11 19 M7 11 L3 11 M15 11 L19 11" stroke="#D4847A" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+      <div>
+        <div class="resonance-plant-name">${rp.name}</div>
+        <div class="resonance-plant-mutter">${rp.mutter}</div>
+      </div>
+    `;
+    resonanceList.appendChild(item);
+  });
+
+  showPage('resultPage');
+
+  // 触发生长动画
+  setTimeout(() => triggerGrowAnimations(), 150);
+
+  // [重构逻辑：雷达图增加 Chronos 第五维]
+  const dimOrder = ['light', 'dry', 'bloom', 'soil', 'chronos'];
+  setTimeout(() => renderRadarChart(chaoticScores, dimOrder), 500);
+}
+
+// ==================== 雷达图渲染（保持 Chart.js 逻辑，升级为五维） ====================
+let radarChartInstance = null;
+
+function renderRadarChart(scores, allDims) {
+  const canvas = document.getElementById('radarChart');
+  const ctx = canvas.getContext('2d');
+
+  if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(181, 69, 58, 0.2)');
+  gradient.addColorStop(0.5, 'rgba(91, 140, 111, 0.1)');
+  gradient.addColorStop(1, 'rgba(59, 90, 109, 0.04)');
+
+  const pointColors = allDims.map(dim => {
+    if (dim === 'chronos') return scores[dim] > 0 ? 'rgba(181, 69, 58, 0.9)' : 'rgba(59, 90, 109, 0.6)';
+    return scores[dim] >= 50 ? 'rgba(181, 69, 58, 0.9)' : 'rgba(91, 140, 111, 0.5)';
+  });
+  const pointSizes = allDims.map(dim => {
+    if (dim === 'chronos') return 7;
+    return scores[dim] >= 50 ? 6 : 3;
+  });
+
+  // [重构逻辑：Chronos 值映射到 0-100 范围以便雷达图显示]
+  const displayData = allDims.map(dim => {
+    if (dim === 'chronos') {
+      // chronos 范围约 -40 ~ +40，映射到 0-100
+      return Math.max(5, Math.min(95, (scores[dim] + 50)));
+    }
+    return scores[dim];
+  });
+
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['光照欲', '耐旱度', '花期差', '土壤依赖', '时间相位'],
+      datasets: [{
+        label: '你的五维结构',
+        data: displayData,
+        backgroundColor: gradient,
+        borderColor: 'rgba(181, 69, 58, 0.5)',
+        borderWidth: 1.8,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: pointSizes,
+        pointHoverRadius: 7,
+        tension: 0.25
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          beginAtZero: false, min: 0, max: 100,
+          ticks: { display: false, stepSize: 20 },
+          pointLabels: {
+            font: { size: 11, weight: '600', family: "'PingFang SC','Microsoft YaHei',sans-serif" },
+            color: '#5C5048'
+          },
+          grid: { color: 'rgba(181, 69, 58, 0.08)', lineWidth: 1 },
+          angleLines: { color: 'rgba(181, 69, 58, 0.06)', lineWidth: 1 },
+          backgroundColor: 'rgba(247, 244, 239, 0.3)'
+        }
+      },
+      animation: { duration: 1400, easing: 'easeInOutQuart' }
+    }
+  });
+}
+
+// ==================== 重新测试 ====================
+function restartQuiz() {
+  if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+  ScoreEngine.reset();
+  state.currentQuestionIndex = 0;
+  state.isAnimating = false;
+  state.answerHistory = [];
+  // [重构逻辑：重置生长动画]
+  document.querySelectorAll('.grown').forEach(el => el.classList.remove('grown'));
+  showPage('homePage');
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', () => { showPage('homePage'); });
+</script>
+
+</body>
+</html>
