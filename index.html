@@ -1,0 +1,2502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>你可能是哪一株植物 · 安静的自我观察</title>
+<!-- DNS 预解析：提前连接国内 CDN，加速资源加载 -->
+<link rel="dns-prefetch" href="//cdn.bootcdn.net">
+
+<!-- Chart.js 4.5.0 — 国内 CDN 双保险：BootCDN 主 + 字节跳动 CDN 备用 -->
+<!-- 如果两个 CDN 都失败，页面仍可正常运行（仅雷达图不显示） -->
+<script>var __chartJsReady=false,__html2canvasReady=false;</script>
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"
+        onerror="var s=document.createElement('script');s.src='https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/chart.js/4.5.0/chart.umd.min.js';document.head.appendChild(s);"
+        onload="__chartJsReady=true"></script>
+<!-- html2canvas 1.4.1 — BootCDN 主 + 字节跳动 CDN 备用 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+        onerror="var s=document.createElement('script');s.src='https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/html2canvas/1.4.1/html2canvas.min.js';document.head.appendChild(s);"
+        onload="__html2canvasReady=true"></script>
+<style>
+  :root {
+    --bg-page: #F9F6F1;
+    --bg-card: #FFFEFA;
+    --text-primary: #2B2523;
+    --text-secondary: #5C5048;
+    --text-muted: #948B82;
+    /* 中式配色三原色 */
+    --dai-blue: #3B5A6D;
+    --shi-green: #5B8C6F;
+    --rouge: #B5453A;
+    --rouge-light: #D4847A;
+    --rouge-ghost: rgba(181,69,58,0.05);
+    --border: #E0D9CF;
+    --border-light: #EDE7DD;
+    /* 优化：阴影雾化为超浅色烟雾感 */
+    --shadow-card: 0 2px 32px rgba(92,75,62,0.03);
+    --shadow-card-hover: 0 4px 40px rgba(92,75,62,0.05);
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --transition-smooth: 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+    /* 优化：呼吸感排版 — line-height 1.9-2.2，letter-spacing +0.5px */
+    --font-body: 15px;
+    --line-height-body: 2.0;
+    --card-width: 330px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    height: 100%;
+    overflow: hidden; /* body 自身不滚动，滚动交给内部容器处理 */
+    font-family: system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif !important;
+    background: var(--bg-page);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+    color: var(--text-primary);
+    font-size: var(--font-body);
+    line-height: var(--line-height-body);
+    letter-spacing: 0.9px;
+  }
+
+  /* ===== 主容器 ===== */
+  .app-container {
+    width: 100%;
+    min-height: 100%;
+    height: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden; /* 防止全局横向溢出；纵向滚动交给各 .page 内部处理 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== 页面容器 ===== */
+  .page {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 32px;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+  }
+  /* 需要内容溢出时滚动的页面：答题页、结果页 */
+  .page.scrollable {
+    justify-content: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* ===== 首页 - 封面 ===== */
+  .home-page { text-align: center; gap: 28px; }
+  .home-logo {
+    width: 72px; height: 72px;
+    opacity: 0.85;
+    animation: float 3.2s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .home-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3px;
+    line-height: 1.5;
+  }
+  .home-title .highlight {
+    background: linear-gradient(135deg, var(--rouge), var(--rouge-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .home-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 4px;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+  .home-divider {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rouge-light), transparent);
+    border-radius: 1px;
+  }
+  .home-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 2;
+    max-width: 260px;
+  }
+  .btn-start {
+    margin-top: 8px;
+    padding: 16px 52px;
+    background: var(--rouge);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(181,69,58,0.22);
+    transition: all 0.3s ease;
+  }
+  .btn-start:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 14px rgba(181,69,58,0.14);
+  }
+
+  /* ===== 答题页 ===== */
+  .quiz-page { justify-content: flex-start; padding-top: 52px; gap: 0; }
+  .quiz-progress-wrap { width: 100%; margin-bottom: 36px; }
+  .quiz-progress-bar {
+    width: 100%; height: 3px;
+    background: var(--border-light);
+    border-radius: 2px; overflow: hidden;
+  }
+  .quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--shi-green), var(--dai-blue));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .quiz-progress-text {
+    text-align: right; font-size: 11px;
+    color: var(--text-muted); margin-top: 8px; letter-spacing: 2px;
+  }
+  .quiz-question-card {
+    width: 100%;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px;
+    box-shadow: var(--shadow-card);
+    text-align: center;
+    border: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .quiz-question-card.switching { opacity: 0; transform: translateY(-12px); }
+  .quiz-question-number {
+    font-size: 11px; color: var(--rouge);
+    letter-spacing: 5px; margin-bottom: 18px; font-weight: 600;
+  }
+  .quiz-question-title {
+    font-size: 17px; font-weight: 700;
+    color: var(--text-primary); line-height: 1.8; margin-bottom: 28px;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    width: 100%; padding: 16px 18px;
+    background: #F9F5F0;
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 14px; color: var(--text-primary);
+    cursor: pointer; text-align: left;
+    transition: all 0.3s ease;
+    font-weight: 500; line-height: 1.7;
+  }
+  .quiz-option .option-label {
+    display: inline-block; width: 26px; height: 26px;
+    line-height: 26px; text-align: center;
+    background: rgba(91,140,111,0.12);
+    color: var(--shi-green); border-radius: 50%;
+    font-size: 12px; font-weight: 700;
+    margin-right: 10px; flex-shrink: 0; transition: all 0.3s ease;
+  }
+  .quiz-option.selected .option-label { background: var(--shi-green); color: #fff; }
+  .quiz-option:active { background: #EFE8DF; border-color: var(--border); transform: scale(0.98); }
+  .quiz-option.selected {
+    background: rgba(91,140,111,0.08);
+    border-color: var(--shi-green);
+  }
+
+  /* ==================== 结果页 - 极简新中式 ==================== */
+  .result-page {
+    justify-content: flex-start;
+    padding: 0 0 40px 0;
+    gap: 0;
+    /* 滚动能力由 .page.scrollable 基类统一提供 */
+  }
+  .result-page-inner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 40px 24px 56px;
+  }
+
+  /* 结果头部 */
+  .result-header { text-align: center; margin-bottom: 12px; }
+  .result-plant-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    opacity: 0.8;
+    animation: float 2.8s ease-in-out infinite;
+  }
+  .result-plant-name {
+    font-size: 28px; font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 4px;
+    line-height: 1.3;
+  }
+  .result-plant-subtitle {
+    font-size: 13px; color: var(--text-muted);
+    letter-spacing: 3px; margin-top: 8px;
+    font-weight: 400; font-style: italic;
+  }
+  .result-phase-badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 20px;
+    border: none;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--dai-blue);
+    background: rgba(59,90,109,0.05);
+    box-shadow: 0 1px 12px rgba(92,75,62,0.02);
+  }
+
+  /* ===== 核心金句 ===== */
+  .result-quote-block {
+    width: 100%;
+    text-align: center;
+    padding: 32px 24px;
+    margin: 24px 0 12px;
+    position: relative;
+  }
+  .result-quote-text {
+    font-size: 19px; font-weight: 600;
+    color: var(--text-primary);
+    line-height: 2;
+    letter-spacing: 2px;
+    position: relative;
+    display: inline-block;
+    max-width: 300px;
+  }
+  .result-quote-text::before {
+    content: '\201C';
+    font-size: 44px; color: var(--rouge-light);
+    position: absolute; left: -32px; top: -14px;
+    font-family: Georgia, 'PingFang SC', 'Microsoft YaHei', 'SimSun', serif;
+    line-height: 1; font-weight: 400; opacity: 0.6;
+  }
+  .result-quote-text::after {
+    content: '\201D';
+    font-size: 44px; color: var(--rouge-light);
+    position: absolute; right: -32px; bottom: -28px;
+    font-family: Georgia, 'PingFang SC', 'Microsoft YaHei', 'SimSun', serif;
+    line-height: 1; font-weight: 400; opacity: 0.6;
+  }
+  .result-quote-divider {
+    width: 36px; height: 1px;
+    background: var(--border);
+    margin: 24px auto 0;
+    border-radius: 1px;
+  }
+
+  /* ===== 胶囊标签 ===== */
+  .result-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0 28px;
+  }
+  .result-tag-pill {
+    display: inline-block;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 18px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    letter-spacing: 2.5px;
+    font-weight: 500;
+    background: rgba(247,244,239,0.7);
+    box-shadow: 0 1px 8px rgba(92,75,62,0.02);
+  }
+
+  /* ===== 雷达图 ===== */
+  .radar-container {
+    width: 100%;
+    max-width: 240px;
+    margin: 8px auto 32px;
+    position: relative;
+  }
+  .radar-container canvas { width: 100% !important; height: auto !important; }
+  .radar-section-title {
+    text-align: center;
+    font-size: 11px; color: var(--text-muted);
+    letter-spacing: 4px; margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  /* ===== 生命切片卡片（极简 — 优化：去边框、烟雾阴影） ===== */
+  .slice-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    border: none;
+    /* 生长动画初始状态 — 优化：更细腻的延迟 */
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .slice-card.grown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .slice-card-icon {
+    width: 28px; height: 28px;
+    margin-bottom: 12px;
+    opacity: 0.65;
+  }
+  .slice-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3.5px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(224,217,207,0.5);
+  }
+  .slice-card-body {
+    font-size: var(--font-body);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body);
+    text-align: left;
+    letter-spacing: 0.9px;
+  }
+  /* 素描卡片 */
+  .slice-card.sketch-card .slice-card-title { color: var(--dai-blue); border-bottom-color: rgba(59,90,109,0.12); }
+  .slice-card.sketch-card .slice-card-body { font-size: 16px; font-weight: 500; color: var(--text-primary); font-style: italic; }
+  /* 归宿卡片 — 优化：去边框，温润渐变 */
+  .slice-card.exit-card {
+    background: linear-gradient(135deg, #FBF9F5, #FFFEFA);
+    border: none;
+    box-shadow: 0 2px 28px rgba(92,75,62,0.04);
+  }
+  .slice-card.exit-card .slice-card-title { color: var(--rouge); border-bottom-color: rgba(181,69,58,0.08); }
+  .slice-card.exit-card .slice-card-body { color: #6B3A2E; font-weight: 500; }
+
+  /* 灵魂契约植物 — 优化：去边框，烟雾阴影 */
+  .contract-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: rgba(255,254,250,0.9);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 28px rgba(92,75,62,0.03);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s,
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s;
+  }
+  .contract-card.grown { opacity: 1; transform: translateY(0); }
+  .contract-card-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 3.5px; margin-bottom: 14px; text-transform: uppercase;
+  }
+  .contract-card-name {
+    font-size: 20px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 16px; letter-spacing: 1.5px;
+  }
+  .contract-card-desc {
+    font-size: var(--font-body); line-height: var(--line-height-body);
+    color: var(--text-secondary); text-align: justify; letter-spacing: 0.9px;
+  }
+
+  /* 共振植物谱系卡片 — 新中式高级感 */
+  .resonance-card {
+    width: 100%;
+    max-width: var(--card-width);
+    background: linear-gradient(135deg, rgba(247,244,239,0.6), rgba(255,254,250,0.9));
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 30px 26px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 24px rgba(92,75,62,0.025);
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.18s,
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.18s;
+  }
+  .resonance-card.grown { opacity: 1; transform: translateY(0); }
+  .resonance-card-label {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 3.5px; margin-bottom: 18px; text-transform: uppercase;
+  }
+  .resonance-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(224,217,207,0.35);
+  }
+  .resonance-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .resonance-plant-icon {
+    width: 22px; height: 22px; flex-shrink: 0;
+    opacity: 0.55; margin-top: 2px;
+  }
+  .resonance-plant-name {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    letter-spacing: 1px; line-height: 1.6;
+  }
+  .resonance-plant-mutter {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.9; letter-spacing: 0.7px;
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  /* 底部操作 */
+  .result-save-hint {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 28px 0 12px;
+    font-size: 11px; color: var(--text-muted); letter-spacing: 2px;
+  }
+  .result-save-hint svg { width: 18px; height: 18px; opacity: 0.5; animation: float 2s ease-in-out infinite; }
+  .btn-save-report {
+    padding: 16px 48px;
+    background: var(--rouge);
+    color: #FFFEFA;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px; font-weight: 600; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+    margin-top: 16px; margin-bottom: 10px;
+    box-shadow: 0 4px 24px rgba(181,69,58,0.18);
+    font-feature-settings: "kern" 1;
+  }
+  .btn-save-report:active {
+    background: #A03A31;
+    transform: scale(0.96);
+    box-shadow: 0 2px 14px rgba(181,69,58,0.12);
+  }
+  .btn-save-report:disabled {
+    opacity: 0.5; pointer-events: none;
+  }
+  .btn-restart {
+    padding: 14px 44px;
+    background: var(--bg-card);
+    color: var(--rouge);
+    border: none;
+    border-radius: 50px;
+    font-size: 14px; font-weight: 600; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.3s ease; margin-bottom: 20px;
+    box-shadow: 0 2px 18px rgba(92,75,62,0.04);
+  }
+  .btn-restart:active {
+    background: #FDF8F4;
+    transform: scale(0.96);
+  }
+
+  /* 背景装饰 */
+  .bg-decoration {
+    position: absolute; border-radius: 50%;
+    pointer-events: none; z-index: 0; opacity: 0.03;
+  }
+  .bg-dot-1 {
+    width: 200px; height: 200px;
+    background: var(--dai-blue);
+    top: -60px; right: -60px;
+    animation: float 7s ease-in-out infinite;
+  }
+  .bg-dot-2 {
+    width: 140px; height: 140px;
+    background: var(--shi-green);
+    bottom: -40px; left: -40px;
+    animation: float 6s ease-in-out infinite reverse;
+  }
+  .bg-dot-3 {
+    width: 80px; height: 80px;
+    background: var(--rouge);
+    top: 45%; right: 8%;
+    animation: float 5s ease-in-out infinite 1s;
+  }
+
+  /* 标题区生长动画 — 优化：更细腻的淡入与上移，stagger effect */
+  .result-header, .result-quote-block, .result-tags-row, .radar-section-title, .radar-container {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .result-header.grown, .result-quote-block.grown, .result-tags-row.grown,
+  .radar-section-title.grown, .radar-container.grown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ===== 生活植物双卡片 — Flex 横向排列，移动端不坍缩 ===== */
+  .life-plant-duo {
+    width: 100%;
+    max-width: var(--card-width);
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    margin: 20px 0 14px;
+    /* 生长动画初始状态 */
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.24s,
+                transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) 0.24s;
+  }
+  .life-plant-duo.grown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .life-plant-card {
+    flex: 1 1 50%;
+    min-width: 0;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 20px 16px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  /* 左侧慰藉卡 — 绿色边框 */
+  .life-plant-card.easy-card {
+    border: 1.5px solid rgba(91, 140, 111, 0.35);
+    background: linear-gradient(180deg, rgba(91,140,111,0.04), rgba(255,254,250,1));
+  }
+  /* 右侧困境卡 — 灰调边框 */
+  .life-plant-card.hard-card {
+    border: 1.5px solid rgba(148, 139, 130, 0.3);
+    background: linear-gradient(180deg, rgba(148,139,130,0.03), rgba(255,254,250,1));
+  }
+  .life-plant-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .easy-card .life-plant-card-header { border-bottom-color: rgba(91,140,111,0.15); }
+  .hard-card .life-plant-card-header { border-bottom-color: rgba(148,139,130,0.15); }
+  .life-plant-card-icon {
+    width: 18px; height: 18px; flex-shrink: 0; opacity: 0.6;
+  }
+  .life-plant-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    line-height: 1.4;
+  }
+  .easy-card .life-plant-card-title { color: var(--shi-green); }
+  .hard-card .life-plant-card-title { color: var(--text-muted); }
+  .life-plant-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    letter-spacing: 1.5px;
+    padding: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .life-plant-item .plant-dot {
+    flex-shrink: 0;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    margin-top: 7px;
+  }
+  .easy-card .plant-dot { background: var(--shi-green); opacity: 0.7; }
+  .hard-card .plant-dot { background: var(--text-muted); opacity: 0.5; }
+  .life-plant-item .plant-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .life-plant-item .plant-reason {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-top: 1px;
+  }
+
+  /* 移动端：确保 Flex 不坍缩、不换行 */
+  @media (max-width: 380px) {
+    .life-plant-duo { gap: 8px; }
+    .life-plant-card { padding: 16px 12px; }
+    .life-plant-card-title { font-size: 10px; letter-spacing: 2px; }
+  }
+
+  /* ===== 密钥验证面板 ===== */
+  .login-box {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 24px; padding: 36px 32px;
+    z-index: 10; background: var(--bg-page);
+  }
+  .login-box-icon {
+    width: 56px; height: 56px;
+    opacity: 0.7; margin-bottom: 8px;
+    animation: float 3s ease-in-out infinite;
+  }
+  .login-box-title {
+    font-size: 20px; font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 3px; text-align: center;
+    line-height: 1.5;
+  }
+  .login-box-subtitle {
+    font-size: 12px; color: var(--text-muted);
+    letter-spacing: 3px; margin-bottom: 8px;
+  }
+  .login-box-divider {
+    width: 32px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rouge-light), transparent);
+    border-radius: 1px;
+  }
+  .login-input {
+    width: 100%; max-width: 280px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    font-size: 15px; color: var(--text-primary);
+    text-align: center; letter-spacing: 2px;
+    outline: none; transition: border-color 0.3s ease;
+    font-family: inherit;
+  }
+  .login-input:focus {
+    border-color: var(--shi-green);
+    box-shadow: 0 0 0 3px rgba(91,140,111,0.08);
+  }
+  .login-input::placeholder {
+    color: var(--text-muted);
+    font-size: 13px; letter-spacing: 1.5px;
+  }
+  .login-btn {
+    padding: 14px 48px; background: var(--rouge);
+    color: #fff; border: none; border-radius: 50px;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 3px; cursor: pointer;
+    box-shadow: 0 8px 28px rgba(181,69,58,0.22);
+    transition: all 0.3s ease; font-family: inherit;
+  }
+  .login-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 14px rgba(181,69,58,0.14);
+  }
+  .login-btn:disabled {
+    opacity: 0.5; pointer-events: none; cursor: not-allowed;
+  }
+  .login-hint {
+    font-size: 11px; color: var(--text-muted);
+    letter-spacing: 2px; text-align: center;
+    line-height: 1.8;
+  }
+  .login-error {
+    font-size: 12px; color: var(--rouge);
+    letter-spacing: 1.5px; text-align: center;
+    min-height: 20px; transition: opacity 0.3s ease;
+  }
+  .login-countdown {
+    font-size: 12px; color: var(--rouge);
+    letter-spacing: 1.5px; text-align: center;
+    min-height: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="bg-decoration bg-dot-1"></div>
+  <div class="bg-decoration bg-dot-2"></div>
+  <div class="bg-decoration bg-dot-3"></div>
+
+  <!-- ========== 密钥验证 ========== -->
+  <div id="loginBox" class="login-box">
+    <svg class="login-box-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="28" cy="28" r="14" stroke="#B5453A" stroke-width="1.5" opacity="0.5"/>
+      <path d="M28 22 L28 34 M28 26 L28 30" stroke="#B5453A" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="28" cy="38" r="1.5" fill="#B5453A" opacity="0.6"/>
+    </svg>
+    <div class="login-box-title">安静的观察，需要一把钥匙</div>
+    <div class="login-box-divider"></div>
+    <div class="login-box-subtitle">ENTER YOUR OBSERVATION KEY</div>
+    <input id="orderInput" class="login-input" type="text" placeholder="输入你的观察密钥" autocomplete="off" spellcheck="false">
+    <button id="checkBtn" class="login-btn" onclick="verifyKey()">开启观察</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-countdown" id="loginCountdown"></div>
+    <div class="login-hint">每一把钥匙都是唯一的<br>就像你收到它时的那个瞬间</div>
+  </div>
+
+  <!-- ========== 测试主体内容 ========== -->
+  <div id="testContent" style="display:none;">
+
+  <!-- ========== 首页 ========== -->
+  <div class="page home-page active" id="homePage">
+    <!-- 去Emoji化：使用SVG线条图标 -->
+    <svg class="home-logo" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="28" r="16" stroke="#B5453A" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <path d="M36 44 L36 62" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+      <path d="M26 52 Q36 48 46 52" stroke="#B5453A" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.4"/>
+      <path d="M22 34 Q30 26 36 20 Q42 26 50 34" stroke="#D4847A" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+    <h1 class="home-title">
+      也许，<span class="highlight">你也曾是一株</span><br>安静的植物
+    </h1>
+    <div class="home-divider"></div>
+    <p class="home-subtitle">A QUIET BOTANICAL OBSERVATION</p>
+    <p class="home-desc">
+      在某个潮湿的黄昏，或微光的清晨里<br>
+      我们试着辨认那些与你相似的气息
+    </p>
+    <button class="btn-start" id="btnStart" onclick="startQuiz()">
+      开始这段安静的观察
+    </button>
+  </div>
+
+  <!-- ========== 答题页 ========== -->
+  <div class="page quiz-page scrollable" id="quizPage">
+    <div class="quiz-progress-wrap">
+      <div class="quiz-progress-bar">
+        <div class="quiz-progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="quiz-progress-text" id="progressText">1 / 12</div>
+    </div>
+    <div class="quiz-question-card" id="questionCard">
+      <div class="quiz-question-number" id="questionNumber">Q1</div>
+      <div class="quiz-question-title" id="questionTitle"></div>
+      <div class="quiz-options" id="optionsContainer"></div>
+    </div>
+  </div>
+
+  <!-- ========== 结果页 ========== -->
+  <div class="page result-page scrollable" id="resultPage">
+    <div class="result-page-inner">
+      <div class="result-header" id="resultHeader">
+        <div class="result-plant-icon" id="resultIconSvg"></div>
+        <div class="result-plant-name" id="resultPlantName"></div>
+        <div class="result-plant-subtitle" id="resultPlantSubtitle"></div>
+        <div class="result-phase-badge" id="resultPhaseBadge"></div>
+      </div>
+
+      <!-- 核心金句 -->
+      <div class="result-quote-block" id="resultQuoteBlock">
+        <div class="result-quote-text" id="resultQuote"></div>
+        <div class="result-quote-divider"></div>
+      </div>
+
+      <!-- 胶囊标签 -->
+      <div class="result-tags-row" id="resultTagsRow"></div>
+
+      <!-- 雷达图 -->
+      <div class="radar-section-title" id="radarTitle">五条安静的光谱</div>
+      <div class="radar-container" id="radarContainer">
+        <canvas id="radarChart"></canvas>
+      </div>
+
+      <!-- 生命切片① 素描 -->
+      <div class="slice-card sketch-card" id="cardSketch">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="7" stroke="#3B5A6D" stroke-width="1.5"/><path d="M14 17 L14 26" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M9 22 L14 18 L19 22" stroke="#3B5A6D" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">一个模糊的影子</div>
+        <div class="slice-card-body" id="textSketch"></div>
+      </div>
+
+      <!-- 生命切片② 共生困境 -->
+      <div class="slice-card" id="cardWhyDie">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M14 2 C8 8 6 14 6 18 C6 22 10 26 14 26 C18 26 22 22 22 18 C22 14 20 8 14 2Z" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M14 10 L14 20" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/><path d="M10 15 L18 15" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">一起枯萎的可能</div>
+        <div class="slice-card-body" id="textWhyDie"></div>
+      </div>
+
+      <!-- 生命切片③ 暗面 -->
+      <div class="slice-card" id="cardShadowSlice">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="11" stroke="#B5453A" stroke-width="1.5"/><circle cx="14" cy="14" r="6" stroke="#D4847A" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="slice-card-title">影子的低语</div>
+        <div class="slice-card-body" id="textShadowSlice"></div>
+      </div>
+
+      <!-- 生命切片④ 灵魂契约植物 -->
+      <div class="contract-card" id="cardContract">
+        <div class="contract-card-label">MAYBE · 或许会遇见</div>
+        <div class="contract-card-name" id="labelSuitable"></div>
+        <div class="contract-card-desc" id="textSuitable"></div>
+      </div>
+
+      <!-- 生命切片④½ 共振植物谱系 -->
+      <div class="resonance-card" id="cardResonance">
+        <div class="resonance-card-label">✧ 也许它们也认得你 · 共振的植物</div>
+        <div id="resonanceList"></div>
+      </div>
+
+      <!-- 生命切片⑤ 精神搭子 -->
+      <div class="slice-card" id="cardLover">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M4 18 Q8 6 14 4 Q20 6 24 18" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="14" cy="10" r="2" stroke="#3B5A6D" stroke-width="1"/><circle cx="10" cy="18" r="1.5" stroke="#3B5A6D" stroke-width="1"/><circle cx="18" cy="18" r="1.5" stroke="#3B5A6D" stroke-width="1"/></svg>
+        <div class="slice-card-title">遥远的同伴</div>
+        <div class="slice-card-body" id="textLover"></div>
+      </div>
+
+      <!-- 生命切片⑥ 归宿 -->
+      <div class="slice-card exit-card" id="cardInsomnia">
+        <svg class="slice-card-icon" viewBox="0 0 28 28" fill="none"><path d="M14 3 L14 12" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M14 15 L14 25" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M7 14 L13 14" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M15 14 L21 14" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="slice-card-title">暗下来的时刻</div>
+        <div class="slice-card-body" id="textInsomnia"></div>
+      </div>
+
+      <!-- 生活植物双卡片：慰藉 vs 困境 -->
+      <div class="life-plant-duo" id="lifePlantDuo">
+        <div class="life-plant-card easy-card">
+          <div class="life-plant-card-header">
+            <svg class="life-plant-card-icon" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#5B8C6F" stroke-width="1.3"/><path d="M9 5 L9 12 M6 9 L12 9" stroke="#5B8C6F" stroke-width="1" stroke-linecap="round"/></svg>
+            <span class="life-plant-card-title">或许，它们能带给你慰藉</span>
+          </div>
+          <div id="easyKeepList"></div>
+        </div>
+        <div class="life-plant-card hard-card">
+          <div class="life-plant-card-header">
+            <svg class="life-plant-card-icon" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#948B82" stroke-width="1.3"/><path d="M5 5 L13 13 M13 5 L5 13" stroke="#948B82" stroke-width="1" stroke-linecap="round"/></svg>
+            <span class="life-plant-card-title">这或许是你们的困境</span>
+          </div>
+          <div id="hardKeepList"></div>
+        </div>
+      </div>
+
+      <div class="result-save-hint">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 2 L9 14 M4 10 L9 15 L14 10" stroke="#948B82" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span>轻触下方，保存这一页安静的观察</span>
+      </div>
+      <button class="btn-save-report" id="btnSaveReport" onclick="saveReportAsImage()">保存这份性格标本</button>
+      <button class="btn-restart" onclick="restartQuiz()">再观察一次</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ==================== 密钥验证（SHA-256 哈希校验） ====================
+// ★ 说明：此处仅存储订单号的 SHA-256 哈希值，不存储明文。
+//   新增订单号请使用 hash-tool.html 生成哈希，粘贴到下方数组即可。
+var hashedOrders = [
+  '44f66909de182f64431897419c29a288a4b861178d507ac3c82f2e62360391bd',
+  '098d9f964cdaf62fe50de219671f073922b4dd4a25f36de98930c207b725ac25',
+  'c03ea39c5844307606c01d9f451d423e14e9a074267a479ad272dbc5cd57f13e',
+  '07b9acdcc2272bda5800b212486dac2331c5d8a77a82c416d629a45433959640',
+  'b81925e32c6392604ab493ee7ad299a23cfb1a6a8852d14017c962eec7e74432',
+  '66d17f8e622872b9778955c60a8bb94cbf51acdd693de728b3a750fa6d2ee23a'
+];
+
+var _failedAttempts = 0;
+var _lockoutTimer = null;
+var _lockoutSeconds = 0;
+
+// 将 ArrayBuffer 转为十六进制字符串
+function bufferToHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
+    .map(function(b) { return b.toString(16).padStart(2, '0'); })
+    .join('');
+}
+
+// ● 哈希校验主逻辑（异步：Web Crypto API）
+function verifyKey() {
+  var input = document.getElementById('orderInput');
+  var btn = document.getElementById('checkBtn');
+  var errorEl = document.getElementById('loginError');
+  var countdownEl = document.getElementById('loginCountdown');
+
+  if (btn.disabled && _lockoutSeconds > 0) return;
+
+  var value = input.value.trim();
+  if (!value) {
+    errorEl.textContent = '请输入密钥';
+    return;
+  }
+
+  // 转为 ArrayBuffer 后计算 SHA-256
+  var encoder = new TextEncoder();
+  var data = encoder.encode(value);
+
+  crypto.subtle.digest('SHA-256', data).then(function(hashBuffer) {
+    var hashHex = bufferToHex(hashBuffer);
+
+    // 比对预存哈希数组
+    var matched = hashedOrders.some(function(h) { return h === hashHex; });
+
+    if (matched) {
+      errorEl.textContent = '';
+      countdownEl.textContent = '';
+      _failedAttempts = 0;
+      input.value = '';
+
+      // ★ 防篡改 ①：写入 sessionStorage 标记（关闭标签页即失效）
+      try {
+        sessionStorage.setItem('_plant_auth_key', hashHex);
+      } catch(e) {}
+
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('testContent').style.display = 'block';
+    } else {
+      handleFailedAttempt(errorEl, countdownEl, btn, input);
+    }
+  }).catch(function() {
+    // crypto.subtle 不可用时降级为精确匹配（极少数老旧浏览器）
+    errorEl.textContent = '当前浏览器不支持安全校验，请使用现代浏览器打开';
+  });
+}
+
+function handleFailedAttempt(errorEl, countdownEl, btn, input) {
+  _failedAttempts++;
+  errorEl.textContent = '密钥无效或已失效，请联系客服';
+  input.value = '';
+  input.focus();
+
+  if (_failedAttempts >= 3) {
+    _lockoutSeconds = 30;
+    btn.disabled = true;
+    errorEl.textContent = '尝试次数过多，请等待 ' + _lockoutSeconds + ' 秒后再试';
+
+    _lockoutTimer = setInterval(function() {
+      _lockoutSeconds--;
+      if (_lockoutSeconds <= 0) {
+        clearInterval(_lockoutTimer);
+        _lockoutTimer = null;
+        btn.disabled = false;
+        _failedAttempts = 0;
+        errorEl.textContent = '';
+        countdownEl.textContent = '';
+      } else {
+        errorEl.textContent = '尝试次数过多，请等待 ' + _lockoutSeconds + ' 秒后再试';
+        countdownEl.textContent = '（还剩 ' + _lockoutSeconds + ' 秒）';
+      }
+    }, 1000);
+  }
+}
+
+// ★ 防篡改 ②：页面加载时检查 sessionStorage 恢复状态
+(function initAuth() {
+  var stored = null;
+  try { stored = sessionStorage.getItem('_plant_auth_key'); } catch(e) {}
+
+  if (stored && hashedOrders.some(function(h) { return h === stored; })) {
+    // 已通过验证 → 直接显示内容
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('testContent').style.display = 'block';
+  } else {
+    // 未验证 → 显示登录面板
+    document.getElementById('loginBox').style.display = '';
+    document.getElementById('testContent').style.display = 'none';
+  }
+})();
+
+// ★ 防篡改 ③：定时检测 DOM 状态 — 若 loginBox 被控制台强行移除则恢复
+(function guardAuth() {
+  setInterval(function() {
+    if (typeof hashedOrders === 'undefined') return;
+    try {
+      var stored = sessionStorage.getItem('_plant_auth_key');
+      var isAuthed = stored && hashedOrders.some(function(h) { return h === stored; });
+      var loginBox = document.getElementById('loginBox');
+      var testContent = document.getElementById('testContent');
+      if (!isAuthed && loginBox && loginBox.style.display === 'none') {
+        loginBox.style.display = '';
+        if (testContent) testContent.style.display = 'none';
+      }
+    } catch(e) {}
+  }, 2000);
+})();
+
+// 回车键触发验证
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var loginBox = document.getElementById('loginBox');
+    if (loginBox && loginBox.style.display !== 'none') {
+      verifyKey();
+    }
+  }
+});
+
+// ==================== 多维度计分引擎（五维） ====================
+// [重构逻辑：在原有四维基础上增加 Chronos 时间相位维度]
+const ScoreEngine = {
+  scores: { light: 50, dry: 50, bloom: 50, soil: 50, chronos: 0 },
+  reset() { this.scores = { light: 50, dry: 50, bloom: 50, soil: 50, chronos: 0 }; },
+  apply(effects) {
+    for (const [key, delta] of Object.entries(effects)) {
+      if (this.scores.hasOwnProperty(key)) {
+        this.scores[key] = Math.max(5, Math.min(95, this.scores[key] + delta));
+      }
+    }
+  },
+  getSnapshot() { return { ...this.scores }; },
+
+  // [重构逻辑：Chronos 维度 — 基于答题分布特征计算时间相位]
+  // 总分越高、波动越大 → "发散"（初生）；总分越低、越平稳 → "收敛"（沉淀）
+  computeChronos(answerHistory) {
+    const vals = answerHistory; // 每个选项的 effect 强度总和
+    const sum = vals.reduce((a, b) => a + b, 0);
+    const avg = sum / vals.length;
+    const variance = vals.reduce((s, v) => s + (v - avg) * (v - avg), 0) / vals.length;
+    // chronos > 0 → 发散/初生；chronos <= 0 → 收敛/沉淀
+    this.scores.chronos = Math.round((avg * 0.6 + Math.sqrt(variance) * 0.4) - 50);
+  }
+};
+
+// [重构逻辑：混沌因子 — 全量随机种子，为每个测试环节提供独立熵源]
+let chaosSeed = Math.random();
+
+// ==================== 扰动因子：为五维得分注入随机噪声 ====================
+// [重构：Math.random() 在 ±10 范围内波动，打破固定阈值带来的重复结果]
+function addNoisePerturbation(scores) {
+  const noise = () => (Math.random() - 0.5) * 20; // ±10 均匀分布
+  return {
+    light:  Math.max(5, Math.min(95, Math.round(scores.light  + noise()))),
+    dry:    Math.max(5, Math.min(95, Math.round(scores.dry    + noise()))),
+    bloom:  Math.max(5, Math.min(95, Math.round(scores.bloom  + noise()))),
+    soil:   Math.max(5, Math.min(95, Math.round(scores.soil   + noise()))),
+    chronos: Math.round(scores.chronos + noise())
+  };
+}
+
+// ==================== 题库（12道题，保持不变） ====================
+const questions = [
+  {
+    id: 1,
+    title: '如果把你的疲惫拟音化，你觉得它最像以下哪种声音？',
+    options: [
+      { label: 'A', text: '旷野上风穿过枯草的沙沙声', effects: { light: -10, dry: +15, bloom: 0, soil: -5 } },
+      { label: 'B', text: '深夜无人的房间里，石英钟表盘沉重的滴答声', effects: { light: -15, dry: +5, bloom: -10, soil: 0 } },
+      { label: 'C', text: '暴雨突然砸向盛夏芭蕉叶，那种沉闷又密集的撞击声', effects: { light: +10, dry: -10, bloom: +15, soil: 0 } },
+      { label: 'D', text: '咖啡馆里无数环境音和杯盏碰撞，被隔绝在耳机外的嗡嗡声', effects: { light: +5, dry: +5, bloom: 0, soil: +10 } }
+    ]
+  },
+  {
+    id: 2,
+    title: '当你在一段关系或一个集体中感到"被冒犯"时，你的第一本能是？',
+    options: [
+      { label: 'A', text: '瞬间开启"静音模式"，表面客客气气，内心已经默默和对方断联', effects: { light: -5, dry: +20, bloom: 0, soil: -10 } },
+      { label: 'B', text: '自嘲或开玩笑化解，但事后会在深夜反复咀嚼、内耗很久', effects: { light: +10, dry: -15, bloom: +10, soil: 0 } },
+      { label: 'C', text: '带着冷酷的理智直接温和回击，不带情绪，但刺得对方极痛', effects: { light: +5, dry: +10, bloom: +15, soil: 0 } },
+      { label: 'D', text: '算了，无所谓，潜意识里觉得反正大家迟早都会散场', effects: { light: 0, dry: +10, bloom: 0, soil: -20 } }
+    ]
+  },
+  {
+    id: 3,
+    title: '允许你偷走宇宙的一样东西放进你的房间，你最想带走什么？',
+    options: [
+      { label: 'A', text: '永远在半空中漂浮、不受任何重力约束的一缕云雾', effects: { light: +5, dry: 0, bloom: +5, soil: -15 } },
+      { label: 'B', text: '超新星爆发那一瞬间，被定格在时间缝隙里的耀眼微光', effects: { light: +15, dry: -5, bloom: +15, soil: 0 } },
+      { label: 'C', text: '一块沉睡在深海几千米下、能够吞噬所有喧嚣的透明黑曜石', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'D', text: '被雨水打湿的、散发着微苦橙叶气味的黄昏空气', effects: { light: +5, dry: -5, bloom: 0, soil: +15 } }
+    ]
+  },
+  {
+    id: 4,
+    title: '刷到感兴趣的内容时，你在社交平台（如小红书）通常处于什么状态？',
+    options: [
+      { label: 'A', text: '疯狂精修图文，追求极致视觉与高密度思考，渴望被精准读懂', effects: { light: +20, dry: -10, bloom: +10, soil: 0 } },
+      { label: 'B', text: '仅当赛博日记，记录极其私人碎片化的意识流，不在乎有没有人看', effects: { light: -15, dry: +10, bloom: 0, soil: -5 } },
+      { label: 'C', text: '只点赞收藏，几乎不发帖，像一个冷静潜水的隐形局外人', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'D', text: '偶尔情绪上头发些毁灭感碎碎念，过几天又悄悄删掉', effects: { light: +10, dry: -15, bloom: +20, soil: 0 } }
+    ]
+  },
+  {
+    id: 5,
+    title: '如果你的安全感有一个具象化的场景，它会是？',
+    options: [
+      { label: 'A', text: '一个人在暴雨夜的小屋里，拉死窗帘，亮一盏暖黄色的微光台灯', effects: { light: -10, dry: +5, bloom: 0, soil: +15 } },
+      { label: 'B', text: '独自走在完全陌生的异国街头，周围没有任何人认识你', effects: { light: +5, dry: +15, bloom: 0, soil: -20 } },
+      { label: 'C', text: '待在有猫有狗、植物肆意生长的杂乱房间，听它们均匀的呼吸声', effects: { light: -5, dry: -10, bloom: 0, soil: +20 } },
+      { label: 'D', text: '站在能俯瞰整座城市霓虹的悬崖边缘，风极大，但你很清醒', effects: { light: +10, dry: +15, bloom: +10, soil: 0 } }
+    ]
+  },
+  {
+    id: 6,
+    title: '你怎么看待自己身上那些"不合群、敏感、别扭"的小角落？',
+    options: [
+      { label: 'A', text: '讨厌它们，让我活得很累，一直在努力学着变钝、学着妥协', effects: { light: 0, dry: -15, bloom: -5, soil: +10 } },
+      { label: 'B', text: '它们是我保护自己的尖刺。我用冷漠伪装它们，懂的人自然会懂', effects: { light: -5, dry: +20, bloom: +5, soil: 0 } },
+      { label: 'C', text: '无所谓，这是我保持清醒和艺术触角的武器，我很骄傲自己是个异类', effects: { light: +15, dry: +15, bloom: 0, soil: -10 } },
+      { label: 'D', text: '一种隐秘的宿命。觉得在过去的某个时代，肯定也有人和我一模一样地纠结过', effects: { light: 0, dry: -5, bloom: +5, soil: +15 } }
+    ]
+  },
+  {
+    id: 7,
+    title: '想象一下，如果你桌上那盆养了很久的植物突然在深夜对你开口说了一句话，你直觉它会说什么？',
+    options: [
+      { label: 'A', text: '"别看了，早点睡吧，你的内耗把我都熏枯萎了。"', effects: { light: -10, dry: -10, bloom: +15, soil: 0 } },
+      { label: 'B', text: '"其实你不用每天都来盯着我，我们保持距离，各自生长就很好。"', effects: { light: -5, dry: +20, bloom: 0, soil: -5 } },
+      { label: 'C', text: '"谢谢你今天带回来的那束光，我很喜欢。"', effects: { light: +15, dry: -10, bloom: 0, soil: +10 } },
+      { label: 'D', text: '"带我走吧，这个房间的班味太重了，我想去旷野。"', effects: { light: 0, dry: +10, bloom: +5, soil: -20 } }
+    ]
+  },
+  {
+    id: 8,
+    title: '在你的潜意识里，你认为"养花总是死"的终极原因往往是因为？',
+    options: [
+      { label: 'A', text: '三分钟热度，刚买来时恨不得一天浇八次水，过几天就完全忘了它的存在', effects: { light: +5, dry: -15, bloom: +20, soil: 0 } },
+      { label: 'B', text: '总是把它放在阴暗的角落，害怕带它去晒太阳，觉得它和自己一样不需要社交', effects: { light: -20, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'C', text: '稍微有一片叶子枯黄就会焦虑得百度一整晚，无微不至的关心反而窒息了它', effects: { light: 0, dry: -15, bloom: +10, soil: +20 } },
+      { label: 'D', text: '没什么原因，可能我天生自带一种"寸草不生"的清冷磁场，连植物都想逃跑', effects: { light: -5, dry: +20, bloom: 0, soil: -10 } }
+    ]
+  },
+  {
+    id: 9,
+    title: '如果把你的"心动"或者"爱意"比作植物的某个瞬间，那会是？',
+    options: [
+      { label: 'A', text: '漫长冬眠后，在某个平淡无奇的清晨，突然破土而出的第一抹嫩绿', effects: { light: +5, dry: 0, bloom: -15, soil: +15 } },
+      { label: 'B', text: '昙花展现的那个午夜，只有极少数人能看见的、带着毁灭感的盛开', effects: { light: +10, dry: -10, bloom: +25, soil: 0 } },
+      { label: 'C', text: '哪怕长在最贫瘠、最没有养分的岩石缝里，也一定要开给太阳看的野玫瑰', effects: { light: +15, dry: +15, bloom: 0, soil: -10 } },
+      { label: 'D', text: '不需要开花，只要静静长在深山老林里，年复一年散发清冷气息的松柏', effects: { light: -15, dry: +20, bloom: -10, soil: 0 } }
+    ]
+  },
+  {
+    id: 10,
+    title: '当你独自经历了一场巨大的精神崩溃后，你通常如何完成"自我浇灌"？',
+    options: [
+      { label: 'A', text: '彻底切断所有人的联系，关机断网，在黑暗中睡到不知黑夜白昼', effects: { light: -15, dry: +25, bloom: 0, soil: -10 } },
+      { label: 'B', text: '疯狂刷社交平台、疯狂发长文碎碎念，迫切想抓住一个能听懂自己说话的人', effects: { light: +20, dry: -15, bloom: 0, soil: +15 } },
+      { label: 'C', text: '出门漫无目的地散步、坐公交车坐到终点站，把所有的情绪都丢给流动的风', effects: { light: 0, dry: +10, bloom: +10, soil: -20 } },
+      { label: 'D', text: '表面上像个没事人一样继续上课上班，内心却在大声尖叫，用意志力硬撑', effects: { light: -5, dry: +10, bloom: +15, soil: 0 } }
+    ]
+  },
+  {
+    id: 11,
+    title: '如果有一株"植物恋人"正在跨越时空走向你，你希望它带着什么样的气味？',
+    options: [
+      { label: 'A', text: '极其干净、像刚洗完的白衬衫在太阳下暴晒后的阳光草本香', effects: { light: +15, dry: -10, bloom: 0, soil: +15 } },
+      { label: 'B', text: '潮湿森林深处，带着泥土、青苔与一丝微苦的木质雨水香', effects: { light: -10, dry: +15, bloom: 0, soil: +5 } },
+      { label: 'C', text: '极其浓郁、辛辣、带着一丝危险和诱惑的黑夜大丽花香', effects: { light: +10, dry: -5, bloom: +20, soil: 0 } },
+      { label: 'D', text: '没有味道，干净得像冬天的第一场初雪，冰凉而疏离', effects: { light: -15, dry: +20, bloom: 0, soil: -15 } }
+    ]
+  },
+  {
+    id: 12,
+    title: '看着这个屏幕，如果要把你这一生的敏感、拧巴和清醒当成一个礼物送给世界，你会把它包成什么样？',
+    options: [
+      { label: 'A', text: '包裹成一朵带刺的黑色野玫瑰，哪怕刺痛别人，也要让人记住我的颜色', effects: { light: +20, dry: +15, bloom: +15, soil: 0 } },
+      { label: 'B', text: '压缩成一粒小小的、平平无奇的种子，随手丢进旷野里，任由它自生自灭', effects: { soil: -20, dry: +15, light: -15, bloom: 0 } },
+      { label: 'C', text: '做成一剂散发着微苦气味的疗愈草本，只送给那些懂我痛苦的同类', effects: { soil: +15, dry: +10, light: +5, bloom: 0 } },
+      { label: 'D', text: '不需要任何包裹，让它随风散去。在这个庸俗的世界上，我的清醒不需要任何见证', effects: { dry: +20, light: -25, soil: -10, bloom: 0 } }
+    ]
+  }
+];
+
+// ==================== 32种植物主格（16基础 × 2时间相位） ====================
+// [优化：每个亚种增加 altQuotes 数组，重测时随机抽取，确保同类别结果不重复]
+const primaryPlants = {
+  // HHHH — 孔雀龙舌兰
+  "HHHH": {
+    base: { name: "孔雀龙舌兰", sub: "诞生于神殿废墟，某种纯粹的极致" },
+    divergent: { name: "破晓龙舌兰", sub: "刚破壳的火焰，尚未学会收敛锋芒",
+      quotes: ["也许这世上本就没有伪装这回事。在某种光线里，你的锐利不需要解释。","我们看见一种未经打磨的锋利——笨拙的、滚烫的，像刚从熔炉里取出的铁。","有一些东西，在学会收敛之前，反而离真实最近。","关于温度这件事：失控的火焰比温顺的烛火更让人无法移开目光。"] },
+    convergent: { name: "沉金龙舌兰", sub: "在灰烬中冷却为不朽的黄金",
+      quotes: ["某天清晨醒来，发现沉默不是消失——是燃烧过后淬出的一小块琥珀。","精准是一种不需要外显的东西。它藏在那次不经意的停顿里，微光闪烁。","烈火过后，我们在地上捡到的不是灰烬，是一块不易腐蚀的什么。","不再急着证明任何事。或许不证明本身，就是最安静的回响。"] }
+  },
+  // HHHL — 赛博极光捕蝇草
+  "HHHL": {
+    base: { name: "赛博极光捕蝇草", sub: "悬浮于高空、没有重力的流浪星尘" },
+    divergent: { name: "脉冲捕蝇草", sub: "每一条触须都在向外发射信号",
+      quotes: ["有一种渴望是被接住，但伸手之前先亮出刺——这是一种什么样的矛盾。","那些信号在某种空旷里以光速扩散，接收者也许还没有出生。","发送了太多频率，多到某个夜晚自己都分不清哪一条才是真正想说的。","像一颗规律自转的脉冲星，在宇宙深处持续发出某种只有同类能破译的韵律。"] },
+    convergent: { name: "静默捕蝇草", sub: "已将信号收回，在真空里独善其身",
+      quotes: ["不再发射任何频率之后，我们忽然感受到了某种更深的引力。","当所有噪音都停歇，存在本身反而更加清晰——像雾气散去的湖面。","触须收回来，奇妙的是，不用伸手也能感知周围的温度。","停止呼叫之后听见的回响，来自胸腔深处——原来心跳一直都在那里。"] }
+  },
+  // HHLH — 镜像双生极光兰
+  "HHLH": {
+    base: { name: "镜像双生极光兰", sub: "锁在琥珀里、拒绝风吹散的精致标本" },
+    divergent: { name: "棱镜极光兰", sub: "还在折射每一个角度的光",
+      quotes: ["千万种反射叫人着迷，以至于忘了光源从来就在体内某个安静的地方。","每一面棱镜像一个微小的面具——被击碎的那天，或许能看见光原本的颜色。","在不同的人面前折射出不同的波长，回到自己房间时，不记得原初的色调。","多面性是一座迷宫。有趣的是，造迷宫的人自己也正在迷路。"] },
+    convergent: { name: "定色极光兰", sub: "选定了一个波长，从此不再摇摆",
+      quotes: ["风终于吹不散什么了。我们学会了自己成为自己的琥珀，缓慢而坚定。","当所有反射都消失，最纯粹的光原来不是折出来的——是从内部烧出来的。","选定了一种颜色，不因为它最美，只因为那是某次失重中第一次看见自己的模样。","不再摇摆不是僵硬。只是终于找到了那个无需解释的波长，像找到回家的路。"] }
+  },
+  // HHLL — 法式几何松柏
+  "HHLL": {
+    base: { name: "法式几何松柏", sub: "清冷美术馆里，独自站了很久" },
+    divergent: { name: "锐角松柏", sub: "仍在切割空气，寻找最精确的轮廓",
+      quotes: ["用某种精密的逻辑丈量世界，却忘了自己从未被任何公式定义过。","每一个锐角像是对混沌的抵抗——但世界从来不是坐标系，我们也从来不是方程式。","试图用最精确的线条画出自己，却发现最精确的东西往往有最不像人的轮廓。","理性是一把手术刀。解剖世界的间隙，也在解剖自己那块柔软的角落。"] },
+    convergent: { name: "恒温松柏", sub: "线条已定，清冷中透出温润",
+      quotes: ["不需要任何人的注视来确认存在了。这件事本身，就是一种微光的自由。","几何是最古老的语言。学着用它来写诗，而不是画图——这件事花了很久。","清冷不再是一种距离，而是一种不需要解释的质地，像晨雾中的远山。","终于允许线条之间留有缝隙——让光透进来一点，让风偶尔穿过。"] }
+  },
+  // LHHH — 灰烬黑曜玫瑰
+  "LHHH": {
+    base: { name: "灰烬黑曜玫瑰", sub: "废土里延迟爆发的破坏性浪漫" },
+    divergent: { name: "裂焰玫瑰", sub: "正在废墟中积蓄第一缕硝烟",
+      quotes: ["火光能烧多远，也许连它自己也不知道。但引线的咝咝声，已经听见了。","废墟在某些时刻比温室更诚实。雨水浸过的砖缝里，冒出的绿比任何花圃都真实。","有一种浪漫带着摧毁的气味，但它毁掉的不是世界——是自己搭建的假墙。","学习如何把某种潮湿的愤怒变成光，而不是把光变成更涩的愤怒——这件事正在进行。"] },
+    convergent: { name: "暗火玫瑰", sub: "燃尽后留下的余温比火焰更持久",
+      quotes: ["不再需要点燃黑夜了。某个瞬间发现，存在本身就让周围的黑暗微微退却。","燃尽不是终点。最烫的温度不在火焰里，藏在冷却后的余烬深处，不声张。","在灰烬中长出新的花瓣——黑色的，沉默的，比火焰更坚硬，比水更温润。","原来最深的浪漫不是烧尽一切。是烧过之后，还能在焦土下重新伸出一根须。"] }
+  },
+  // LHHL — 子夜毒性夜来香
+  "LHHL": {
+    base: { name: "子夜毒性夜来香", sub: "在白昼安静，在深夜缓缓展开" },
+    divergent: { name: "锐毒夜来香", sub: "毒性尚未提纯，正在四处试炼",
+      quotes: ["某个黄昏还在分辨哪些人值得被灼伤。这分辨本身，也许就是一种柔软的练习。","毒性不是武器，是还不懂得如何把尖锐翻译成另一种语言的证明。","用试探去触碰每一个靠近的人——或许最值得靠近的人，从未害怕过那些刺。","曾以为毒是盔甲。后来隐约觉得，它只是一道虚掩的门，门后才是更柔软的存在。"] },
+    convergent: { name: "隐香夜来香", sub: "毒性已内化为一种若有若无的芬芳",
+      quotes: ["不再审判白昼了。只是安静地等夜色从窗台漫进来，像等一位老朋友。","毒变成了一种只有同类才能辨认的气息——无需多言，闻得见的人自然闻得见。","审判太累了。某天夜里放下那柄法槌，端起一杯刚好微温的茶。","最深的毒性是让人察觉不到毒的存在，只觉得某种莫名的安心在空气里浮着。"] }
+  },
+  // LHLH — 苦橙独活草
+  "LHLH": {
+    base: { name: "苦橙独活草", sub: "深渊石缝里，带着一点微苦的回甘" },
+    divergent: { name: "涩橙独活草", sub: "苦味还在舌尖寻找回甘的路径",
+      quotes: ["尚未学会如何温柔地给出甜——先用微苦试探，再决定是否递出那一点回甘。","苦不是缺点的证据。也许它是一种雷达：能咽下这口苦的人，才尝得到之后的甜。","不是一切伤都需要药。有些时候，需要的只是一个知道苦是什么味道的人，坐在旁边。","还在犹豫要不要露出那一点点甜——怕被误解成别的，怕它不够，怕吓到谁。"] },
+    convergent: { name: "回甘独活草", sub: "苦已化甜，成为不需言说的安慰",
+      quotes: ["不再试图证明自己是解药了。靠近的人，在某个微光的时刻自己安静了下来。","苦变成一种只有时间才能翻译的语言。而时间已经带来了足够多的译者。","不说安慰的话。存在本身，在某些时刻，就是一剂不需要处方的什么。","回甘不是变甜了。是学会了让苦和甜同时存在，像江水和海水在某处交汇而不争执。"] }
+  },
+  // LHLL — 深海荧光半透明浮萍
+  "LHLL": {
+    base: { name: "深海荧光半透明浮萍", sub: "几千米深海下，一株透明的漫游者" },
+    divergent: { name: "磷光浮萍", sub: "仍在黑暗中寻找同频的微光",
+      quotes: ["一边假装不需要任何连接，一边在暗处发出微弱的光——我们看见了。","光微弱到只有处在同样深度的人才能察觉。而大部分生命生活在浅水区。","不是为照亮别人而发光。荧光是一种确认自己的方式：我还在这里，还在呼吸。","深海那么大，方向还没有找到，但还在游。寻找本身，在某个维度上已经足够了。"] },
+    convergent: { name: "沉光浮萍", sub: "不再寻找，学会了与黑暗共生",
+      quotes: ["不再假装了。是真的不再需要——深海在某些时候比陆地提供了更多自由。","黑暗不再是问题，变成了一种质地。我们在其中滑行，像某种失重的透明的鱼。","光和连接渐渐不是必需品了。觉得某种温度就够了，而温度有很多种形状。","停止了游泳。不是累了，是发现不需要目的地——漂着，在某种维度上，也是一种抵达。"] }
+  },
+  // HLHH — 情绪成瘾金色向日葵
+  "HLHH": {
+    base: { name: "情绪成瘾金色向日葵", sub: "阳光温室里密闭的情感重力场" },
+    divergent: { name: "灼日向日葵", sub: "还在疯狂追逐每一道光的方向",
+      quotes: ["把遇到的每一团暖光都当成太阳来追随，也许忘了自己体内也有一小簇火苗。","追光的方式太炽烈了——炽烈到被追的那些暖意，偶尔觉得微微发烫。","问题不是没有光，是不知道该朝哪个方向才能让湿透的叶子彻底干透。","太擅长给出温度了，以至于忘记被照亮也是一种需要练习的、安静的技能。"] },
+    convergent: { name: "暖辉向日葵", sub: "不再追逐，学会了自转",
+      quotes: ["真正的引力也许来自内部而非远处。那些结痂的旧伤，在某天变成了花瓣的纹理。","停止旋转之后，周围的事物反而开始缓缓环绕。不是因为更亮，是因为更稳了。","不再追光的向日葵，在阴影里也学会了铺展叶片，像在等待一场绵长的降雨。","自转不是孤独。也许是终于变成了一颗完整的星球，有自己的昼夜和季节。"] }
+  },
+  // HLHL — 瞬间完美主义极乐鸟
+  "HLHL": {
+    base: { name: "瞬间完美主义极乐鸟", sub: "午夜时分，会忽然亮起来一小会儿" },
+    divergent: { name: "电闪极乐鸟", sub: "仍在每一个午夜引爆自己",
+      quotes: ["燃烧得那么快，快到连自己也来不及看清火焰里藏着什么颜色的纹理。","每一次爆发像对平庸的某种抗议——但抗议太多，也许会变成另一种形式的重复。","把光芒压缩进瞬间，以为越亮越有价值。但真正的光，也许不需要爆炸来确认自己的存在。","完美是一把双刃的东西。一边雕琢着自己，一边刀背在另一侧留下看不见的细痕。"] },
+    convergent: { name: "长明极乐鸟", sub: "学会了不灭的微光比瞬间更珍贵",
+      quotes: ["不再追求完美了。不完美本身，也许就是一种活的、带着温度的证据。","一盏灯比一道闪电活得更久。选择了成为灯，而不是风暴——这件事需要某种勇气。","终于允许自己犯错了。错误不是瑕疵，是纹理，是区别于机器的那种温润的证明。","长明不是不灭。是即使灭了，也愿意在某个湿润的夜晚，重新划一根火柴。"] }
+  },
+  // HLLH — 琥珀定格时间蒲公英
+  "HLLH": {
+    base: { name: "琥珀定格时间蒲公英", sub: "将温柔死死锁在坚硬外壳里的标本" },
+    divergent: { name: "颤羽蒲公英", sub: "绒毛已张开，正等待第一阵风",
+      quotes: ["站在起飞的边缘——心跳比风的速度快了半拍。某种直觉说，是时候了。","一切都准备好了。只差那一下松开手指，让风去决定方向和落点。","绒毛在微光里轻轻颤着，不是因为害怕飞，是害怕飞错了方向。","起飞前的这一刻，比飞翔本身更值得被记住。因为这一刻，还握着选择。"] },
+    convergent: { name: "散羽蒲公英", sub: "已乘风散去，在每一寸土壤留下印记",
+      quotes: ["不再害怕未知了。发现每一片降落的地方，在某个维度上都是对的。","散落在最意想不到的角落——有些生根了，有些还在空气里漂浮。也许都没关系。","飞翔不是逃离。是一次又一次确认：在任何土壤里，都能缓慢地、不张扬地活下去。","不知道下一阵风会带它去哪。但它知道，它会在那里，用某种方式，继续生长。"] }
+  },
+  // HLLL — 微风鸣响寂静芒草
+  "HLLL": {
+    base: { name: "微风鸣响寂静芒草", sub: "风来就响，风停就忘，野生的节律" },
+    divergent: { name: "啸风芒草", sub: "风一来就响，响完就忘",
+      quotes: ["焦虑像风吹过芒草的沙沙声——每一秒都是新的频率，每一种频率都有名字。","被风吹得哗哗响，但风一停就忘了刚才为什么那么躁动。这也许是某种恩赐。","敏感是天线，接收所有频率，也消耗所有电量。关机这件事，还在学习中。","风穿过的时候全身都在共鸣。但共鸣不一定是音乐，有时候只是好多种声音混合在一起。"] },
+    convergent: { name: "听风芒草", sub: "不再响，学会了在风中静默",
+      quotes: ["风来的时候，只是微微低了低头。不再需要用尖啸来确认自己还活着了。","学会了听风，而不是随风。静默在某个维度上，是一种更深远的回响。","不再沙沙作响之后，听见了风里藏着别的——远处鸟的叫声，泥土里虫子的动静，自己的呼吸。","静默不是压抑。当风穿过你而不吵，在那一刻，你成了风的一部分。"] }
+  },
+  // LLHH — 极夜暗黑风信子
+  "LLHH": {
+    base: { name: "极夜暗黑风信子", sub: "藤蔓般缠绕——一种过于用力的在乎" },
+    divergent: { name: "绞藤风信子", sub: "正用藤蔓缠住每一个靠近的温暖",
+      quotes: ["测试每一段连接的强度，直到它断裂。然后轻声说：看，我早就知道会这样。","藤蔓太紧了，紧到被缠绕的人有点难以呼吸——但奇怪的是，他们并不想松开。","不是不相信爱的存在，是不相信它会持续。所以要在它消失之前，攥得更紧。","缠绕的方式像拥抱又像勒紧。分不清，被缠的人也分不清——但都在那团绿色里留了下来。"] },
+    convergent: { name: "垂藤风信子", sub: "松开了藤蔓，却发现了更深的连接",
+      quotes: ["不再测试了。真正属于这里的东西，不需要藤蔓，也安静地停在身边。","松手之后才发现——不是所有连接都需要力道。有些东西是松的，却从不会滑落。","学会了垂挂：不缠绕，不勒紧，只是静静地在那里，等某个潮湿的午后被人握住。","藤蔓松开后，阳光第一次照到茎的根部。原来那里，一直在不声不响地长新的叶子。"] }
+  },
+  // LLHL — 荒原风化苔藓
+  "LLHL": {
+    base: { name: "荒原风化苔藓", sub: "经历过漫长寂静，还在角落里绿着" },
+    divergent: { name: "干裂苔藓", sub: "仍在风化，仍在剥落",
+      quotes: ["寂静还在建造中。风化的每一块砖，在某个角落还沾着曾经很轻的呼喊。","风化不是衰老。也许是一种用沉默对噪音说话的方式：我不想参与了。","还在剥落——一层一层脱掉不太属于自己的外壳。过程很慢，偶尔有一点点疼。","在荒原上待得太久了，久到忘了湿润的触感。但还在那里——这件事本身，就够了。"] },
+    convergent: { name: "润石苔藓", sub: "雨水已渗入每一道裂缝",
+      quotes: ["那面墙还在，但它不再阻挡什么了。只是安静地立在那里，像一座小小的纪念碑。","裂缝不是失败的证据。是允许湿润进入的地方，是光偶尔能透进来的缝隙。","不再抗争了——不是投降，是发现有些东西不需要抗争，也能在角落里活着。","雨水没有冲走什么。它只是让这些灰绿的苔藓，更柔软地附着在这颗潮湿的星球上。"] }
+  },
+  // LLLH — 远古冰川沉睡地衣
+  "LLLH": {
+    base: { name: "远古冰川沉睡地衣", sub: "拒绝与时代同频的时间漂流瓶" },
+    divergent: { name: "碎冰地衣", sub: "还在等待冰层裂开的第一道光",
+      quotes: ["也许不是在沉睡，一直在等——等某个对的时代，从冰层上轻轻敲三下。","冰层下的生命不是在冬眠，是在积蓄某种极为缓慢的温度。一朝裂开，就是春天。","等待的这道微光还没有来。但等待本身，已经让细胞变得比周围的冰更柔韧了。","碎冰的声音也许是听过的最好的音乐——因为那意味着，快要出来了。"] },
+    convergent: { name: "永冻地衣", sub: "已与冰层达成永恒的共存",
+      quotes: ["不再等待了。沉睡本身，也许就是一种最安静、最优雅的清醒方式。","不必融化。在冰里也能活着，比任何花朵都更理解寒冷的质地和重量。","永恒不是时间的长度。是某个时刻之后，不再需要计算时间的薄厚。","与冰共存之后发现，寒冷不是一个需要对抗的东西。它是一个无需应答的、透明的伴侣。"] }
+  },
+  // LLLL — 宇宙真空星际孢子
+  "LLLL": {
+    base: { name: "宇宙真空星际孢子", sub: "超脱于碳基社会之外，独自漂浮" },
+    divergent: { name: "游离孢子", sub: "正在穿越星际尘埃，尚未找到轨道",
+      quotes: ["在某种真空里漂浮得太久了，久到忘了自己也可能有微小的重量和方向。","没有轨道不是缺憾。只是还不需要被任何引力约束——轻，在某个维度上也是力量。","穿越的每一片星尘都可能成为未来的星系。但停留这件事，还没有想好。","漂浮不是流浪。是用最慢的速度确认：这片无限里，有没有一缕属于自己的引力波。"] },
+    convergent: { name: "定轨孢子", sub: "找到了属于自己的引力场",
+      quotes: ["不再漂浮了。发现即使是最轻的存在，也能在星域的某个角落，找到微弱的锚点。","轨道是自己选的，引力是缓慢相遇的。在宇宙的某处，不再是一个透明的过客。","最轻的粒子也有质量，最小的存在也有公转周期。只是比大多数存在花了更久找到它。","定轨不是停止。是在看似静止的圆周运动里，完成一场最安静、最漫长的旅行。"] }
+  }
+};
+
+// ==================== SVG图标映射（去Emoji化） ====================
+// [重构逻辑：为32种植物提供黛蓝/石青/胭脂配色的SVG图标]
+const plantIcons = {
+  "破晓龙舌兰": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 48" stroke="#B5453A" stroke-width="2" stroke-linecap="round"/><path d="M28 18 L16 12 M28 18 L40 12" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M28 14 L22 26 M28 14 L34 26" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "沉金龙舌兰": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 L28 48" stroke="#5C5048" stroke-width="2" stroke-linecap="round"/><path d="M22 26 Q28 22 34 26" stroke="#B5453A" stroke-width="1.5" fill="none"/><circle cx="28" cy="18" r="3" stroke="#3B5A6D" stroke-width="1.5"/></svg>`,
+  "脉冲捕蝇草": `<svg viewBox="0 0 56 56" fill="none"><path d="M18 24 Q28 14 38 24 Q28 34 18 24Z" stroke="#B5453A" stroke-width="1.8" fill="none"/><path d="M20 28 L28 22 M36 28 L28 22" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "静默捕蝇草": `<svg viewBox="0 0 56 56" fill="none"><path d="M20 24 Q28 18 36 24 Q28 30 20 24Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="24" r="2" fill="#5B8C6F" opacity="0.6"/></svg>`,
+  "棱镜极光兰": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,8 18,48 38,48" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M22 32 L34 32" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/><path d="M24 40 L32 40" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "定色极光兰": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,12 20,44 36,44" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><circle cx="28" cy="28" r="4" stroke="#B5453A" stroke-width="1.2"/></svg>`,
+  "锐角松柏": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,4 20,18 36,18" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><polygon points="28,14 18,30 38,30" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><path d="M28 30 L28 50" stroke="#5C5048" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  "恒温松柏": `<svg viewBox="0 0 56 56" fill="none"><polygon points="28,6 20,20 36,20" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><polygon points="28,16 18,32 38,32" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M28 32 L28 52" stroke="#5C5048" stroke-width="2" stroke-linecap="round"/></svg>`,
+  "裂焰玫瑰": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="6" stroke="#B5453A" stroke-width="1.8"/><path d="M28 22 L28 8 M28 34 L28 48 M22 28 L10 28 M34 28 L46 28" stroke="#B5453A" stroke-width="1.5" stroke-linecap="round"/><path d="M23 23 L14 14 M33 23 L42 14 M23 33 L14 42 M33 33 L42 42" stroke="#D4847A" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "暗火玫瑰": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="7" stroke="#5C5048" stroke-width="1.5"/><circle cx="28" cy="28" r="3" fill="#B5453A" opacity="0.4"/><path d="M28 21 L28 6" stroke="#B5453A" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "锐毒夜来香": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q18 24 14 38 Q22 28 28 22 Q34 28 42 38 Q38 24 28 8Z" stroke="#B5453A" stroke-width="1.5" fill="none"/><path d="M28 22 L28 48" stroke="#5C5048" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "隐香夜来香": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 Q20 24 18 36 Q24 28 28 22 Q32 28 38 36 Q36 24 28 10Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="28" r="2" fill="#D4847A" opacity="0.5"/></svg>`,
+  "涩橙独活草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q22 20 20 34" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M28 8 Q34 20 36 34" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M20 34 Q28 28 36 34" stroke="#D4847A" stroke-width="1.5" fill="none"/></svg>`,
+  "回甘独活草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 Q24 22 22 36" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><path d="M28 10 Q32 22 34 36" stroke="#5B8C6F" stroke-width="1.8" stroke-linecap="round"/><circle cx="28" cy="22" r="5" stroke="#B5453A" stroke-width="1.2"/></svg>`,
+  "磷光浮萍": `<svg viewBox="0 0 56 56" fill="none"><ellipse cx="28" cy="30" rx="18" ry="10" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><ellipse cx="28" cy="30" rx="10" ry="5" stroke="#3B5A6D" stroke-width="1" fill="none"/><circle cx="28" cy="28" r="2" fill="#D4847A" opacity="0.6"/></svg>`,
+  "沉光浮萍": `<svg viewBox="0 0 56 56" fill="none"><ellipse cx="28" cy="32" rx="16" ry="8" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><ellipse cx="28" cy="32" rx="8" ry="3" stroke="#5C5048" stroke-width="1" fill="none"/></svg>`,
+  "灼日向日葵": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="8" stroke="#B5453A" stroke-width="1.8"/><path d="M28 20 L28 8 M28 36 L28 48 M20 28 L10 28 M36 28 L46 28" stroke="#D4847A" stroke-width="1.2" stroke-linecap="round"/><path d="M22 22 L16 16 M34 22 L40 16 M22 34 L16 40 M34 34 L40 40" stroke="#D4847A" stroke-width="0.8" stroke-linecap="round"/></svg>`,
+  "暖辉向日葵": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="10" stroke="#5B8C6F" stroke-width="1.5"/><circle cx="28" cy="28" r="5" fill="#D4847A" opacity="0.3"/></svg>`,
+  "电闪极乐鸟": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 24 L18 18 M28 24 L38 18" stroke="#B5453A" stroke-width="1.8" stroke-linecap="round"/><path d="M18 30 L38 30 L28 48 Z" stroke="#B5453A" stroke-width="1.5" fill="none"/></svg>`,
+  "长明极乐鸟": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 10 L28 26 L20 20 M28 26 L36 20" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M20 30 L36 30 L28 46 Z" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><circle cx="28" cy="32" r="2" fill="#5B8C6F" opacity="0.6"/></svg>`,
+  "颤羽蒲公英": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="40" r="3" stroke="#5C5048" stroke-width="1.5"/><path d="M28 38 L28 18" stroke="#5C5048" stroke-width="1.2" stroke-linecap="round"/><circle cx="28" cy="14" r="12" stroke="#D4847A" stroke-width="1" stroke-dasharray="3 2" fill="none"/></svg>`,
+  "散羽蒲公英": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="42" r="2" fill="#5C5048" opacity="0.5"/><path d="M28 40 L28 20" stroke="#5C5048" stroke-width="1" stroke-linecap="round"/><path d="M20 12 Q28 8 36 12" stroke="#D4847A" stroke-width="1" fill="none"/><circle cx="18" cy="10" r="2" stroke="#D4847A" stroke-width="0.8"/><circle cx="38" cy="10" r="2" stroke="#D4847A" stroke-width="0.8"/></svg>`,
+  "啸风芒草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 48 L28 24" stroke="#5C5048" stroke-width="1.5" stroke-linecap="round"/><path d="M28 22 Q20 14 16 8" stroke="#5B8C6F" stroke-width="1.5" stroke-linecap="round"/><path d="M28 22 Q36 12 42 6" stroke="#5B8C6F" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "听风芒草": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 50 L28 26" stroke="#5C5048" stroke-width="1.8" stroke-linecap="round"/><path d="M28 24 Q22 16 18 10" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M28 24 Q34 16 38 10" stroke="#3B5A6D" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "绞藤风信子": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 8 Q20 18 24 32 Q28 40 20 48" stroke="#B5453A" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M28 8 Q36 18 32 32 Q28 40 36 48" stroke="#D4847A" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  "垂藤风信子": `<svg viewBox="0 0 56 56" fill="none"><path d="M28 6 L28 28" stroke="#3B5A6D" stroke-width="1.5" stroke-linecap="round"/><path d="M28 28 Q20 36 22 48" stroke="#5B8C6F" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M28 28 Q36 36 34 48" stroke="#5B8C6F" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  "干裂苔藓": `<svg viewBox="0 0 56 56" fill="none"><path d="M14 40 Q18 32 28 36 Q38 32 42 40" stroke="#5B8C6F" stroke-width="1.5" fill="none"/><path d="M18 44 L18 48 M28 40 L28 48 M38 44 L38 48" stroke="#5B8C6F" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "润石苔藓": `<svg viewBox="0 0 56 56" fill="none"><path d="M12 38 Q18 30 28 34 Q38 30 44 38" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><circle cx="20" cy="36" r="3" stroke="#5B8C6F" stroke-width="1"/><circle cx="36" cy="34" r="2" stroke="#5B8C6F" stroke-width="1"/></svg>`,
+  "碎冰地衣": `<svg viewBox="0 0 56 56" fill="none"><path d="M16 34 L22 28 L28 32 L34 26 L40 34" stroke="#3B5A6D" stroke-width="1.5" fill="none"/><path d="M22 28 L22 20 M28 32 L28 24 M34 26 L34 18" stroke="#3B5A6D" stroke-width="1" stroke-linecap="round"/></svg>`,
+  "永冻地衣": `<svg viewBox="0 0 56 56" fill="none"><path d="M14 36 L20 28 L28 32 L36 26 L42 36" stroke="#3B5A6D" stroke-width="1.8" fill="none"/><path d="M28 32 L28 44" stroke="#3B5A6D" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  "游离孢子": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="3" stroke="#D4847A" stroke-width="1.5"/><circle cx="16" cy="16" r="1.5" stroke="#5B8C6F" stroke-width="1"/><circle cx="40" cy="20" r="2" stroke="#3B5A6D" stroke-width="1"/><circle cx="20" cy="40" r="2" stroke="#5B8C6F" stroke-width="1"/></svg>`,
+  "定轨孢子": `<svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="4" stroke="#3B5A6D" stroke-width="1.8"/><circle cx="28" cy="28" r="1.5" fill="#B5453A" opacity="0.5"/><circle cx="28" cy="28" r="14" stroke="#5B8C6F" stroke-width="0.8" stroke-dasharray="4 6"/></svg>`
+};
+
+// ==================== 日常疗愈植物池 — 15种接地气的陪伴 ====================
+// [重构：替换过于小众的品种，改用大众化日常植物 + 温婉接地气的口吻]
+const suitableFlowers = {
+  "高燥高土": [
+    { name: "虎皮兰", desc: "大概是最不挑剔的室友。不用怎么管它，它就在角落里安静地竖着，像一柄柄不会说话的短剑。" },
+    { name: "橡皮树", desc: "墨绿厚叶一天天慢慢变大。不需要太多关注，每隔一阵子看一眼，发现它又悄无声息地多了一片叶子。" },
+    { name: "文竹", desc: "细细碎碎的叶片像一团温柔雾气。摆在书桌一角，看书写字时余光里总有一小片柔软。" },
+    { name: "龙骨", desc: "笔直往上长，不需要拐弯抹角。一个月浇一次水就够了——像一个话不多但永远站在你这边的人。" }
+  ],
+  "高燥低土": [
+    { name: "多肉拼盘", desc: "一小盆胖乎乎的形状挤在一起。看它们慢慢变粉、变圆，像在看一群不太会说话的宠物慢慢长大。" },
+    { name: "仙人掌", desc: "圆滚滚的，带着软软的刺。放在窗台上就不用管了——它比你以为的更擅长独自生活，偶尔还会开花给你看。" },
+    { name: "空气凤梨", desc: "不需要盆，不需要土。随手放在贝壳或玻璃杯里，隔几天喷一下水——最轻的陪伴，也是最不需要负担的。" },
+    { name: "长寿花", desc: "叶子肉肉的，花一小簇一小簇地开很久。不惊艳，但那种慢慢开、慢慢败的节奏，刚好配得上一个不太急着赶路的周末。" }
+  ],
+  "低燥高土": [
+    { name: "绿萝", desc: "可能是最适合放在房间里的小东西。给一点水就疯长，从书架上垂下来，像一抹不会干的绿色瀑布。" },
+    { name: "君子兰", desc: "宽厚的叶片向两边对称展开。不急不躁，养好了年年开花——那种橙红色，是时间给的礼物，不是催促出来的。" },
+    { name: "吊兰", desc: "从母株伸出细细的小吊，像在空气里写省略号。随便挂在哪里都行，不怎么挑光，也不怎么挑水。" },
+    { name: "富贵竹", desc: "几根翠绿插进玻璃瓶就活了。不需要土，只需要清水和一点点耐心——看着它生根，像看着某个缓慢但确定的承诺。" }
+  ],
+  "低燥低土": [
+    { name: "铜钱草", desc: "圆圆的小叶子挤满水面，像一群探头探脑的好奇心。给水给光就爆盆——那种旺盛，是毫不遮掩的生命力。" },
+    { name: "白掌", desc: "深绿叶片托着纯白苞片，像一叶扁舟。干净到几乎不需要解释——安静地绿着、白着，就是最好的状态。" },
+    { name: "薄荷", desc: "搓一下叶子，指尖就是整个夏天。好养到什么程度呢——你越不管它，它越疯长。偶尔揪几片泡水，清清凉凉的。" }
+  ]
+};
+
+// ==================== 精神搭子池（扩充版） ====================
+const partnerPlants = [
+  "大理石纹斑叶蒙斯特拉", "索马里沙漠黑没药", "喜马拉雅高寒雪莲", "墨西哥无人区巨人柱",
+  "切尔诺贝利变异苔藓", "撒哈拉银夜仙人掌", "亚马逊迷幻万年青", "冰川消融期冷水花",
+  "加拉帕戈斯红树林", "婆罗洲食虫猪笼草", "黑死病时期疗愈鼠尾草", "枯木重生剧毒白伞菇",
+  "西伯利亚泰加林冻原松", "路易斯安那沼泽落羽杉", "凡尔赛宫镜像极乐鸟",
+  "纪伊半岛枯寂幽灵兰", "苏格兰高地紫色石楠花", "马德拉群岛魔幻月桂树",
+  "比利牛斯山雪绒花", "纳米比亚骷髅海岸千岁兰", "塔克拉玛干沙棘", "西伯利亚冻土杜鹃",
+  "婆罗浮屠火山灰蕨类", "格陵兰冰盖北极柳", "东非大裂谷悬崖芦荟", "南极岩石缝隙地衣",
+  "喜马拉雅雪线垫状点地梅", "亚马逊树冠层附生凤梨", "刚果盆地巨魔芋",
+  "阿拉斯加苔原棉花草", "撒哈拉沙漠玫瑰石", "安第斯山普雅凤梨", "新西兰南岛高山雏菊",
+  "冰岛黑色火山岩苔原", "马达加斯加刺戟木", "加拉帕戈斯巨型仙人掌",
+  "喀喇昆仑蓝罂粟", "斯瓦尔巴群岛极地柳", "乌尤尼盐沼巨型仙人柱", "法罗群岛海崖海石竹",
+  "勘察加半岛地热蕨", "瓦罕走廊高山火绒草", "赫布里底群岛海藻森林", "大蓝洞水下海草床",
+  "鲁文佐里山地衣", "奥卡万戈三角洲纸莎草", "外高加索山地百里香", "的的喀喀湖巨型芦苇",
+  "塔斯马尼亚温带雨林桫椤", "琉球群岛夜间开花仙人掌", "堪察加火山口温泉藻", "也门索科特拉龙血树",
+  "昆仑山流石滩雪兔子", "里海沿岸盐生碱蓬", "川西高原绿绒蒿", "藏东南针叶林松萝",
+  "滇西北高山杜鹃", "武夷山丹霞崖壁卷柏", "怒江干热河谷仙人掌", "帕米尔高原矮桦"
+];
+
+// ==================== 文案减脂 — 动态拼接片段池 ====================
+// [重构逻辑：每段强制50字以内，诗性短语<15字]
+
+// 灵魂素描 — 诗性短语数组（<25字），加权随机抽取
+const sketchFragments = {
+  lightHigh: [
+    "在某种光线里，好像走到哪里，周围的空气就会微微亮起来。",
+    "也许不是故意的——但站在你旁边的人，偶尔会不自觉地眯起眼睛。",
+    "像一盏不太会关的灯。温暖是有的，只是偶尔自己也觉得有点刺眼。",
+    "不大需要寻找光。走路的方式本身，就带着某种金黄色的温度。",
+    "笑起来的时候，上扬的弧度恰好照亮了一个房间——但你不一定察觉。",
+    "不是太阳。只是反射光线的方式，在某些时候比别人更清晰一点。",
+    "光芒有时候温和如烛芯，有时候灼热如炉火——取决于今天的天气和心情。"
+  ],
+  lightLow: [
+    "不是不会亮。只是觉得，在暗一点的地方，反而能看清更多东西。",
+    "把自己的亮度调到最低，像一颗藏在口袋里的、温润的鹅卵石。",
+    "光是内敛的——要凑得很近很近，才能察觉那一丝微弱的暖意。",
+    "选择在暗处待着。不是怕光，是觉得大部分东西，不值得被照亮。",
+    "不是自卑。是一种对曝光本能的节制——像深夜的植物合拢了叶片。",
+    "存在像月光——不需要被看见。但它就在那里，安静地照着某一片水面。",
+    "熄灭不是放弃。是在某种黑暗里，反而看清了一些光里看不清的轮廓。"
+  ],
+  dryHigh: [
+    "习惯了一个人消化很多。用沉默保护着某个连自己也不太触碰的角落。",
+    "像一株在石缝里待了很久的植物——每一次接触，都像用珍贵的水。",
+    "独立这件事学了太久。久到偶尔分不清，是选择孤独，还是习惯了孤独。",
+    "不怎么依赖人。不是因为不需要，是曾经依赖过一些后来变轻的东西。",
+    "耐旱度惊人。能在某种情感的荒漠里，独自活过好几个月，甚至更长。",
+    "学会了自己给自己浇水。当然，偶尔也希望有人轻轻洒一小勺。",
+    "孤独像一种用旧了的生存技能。有时想戒，有时又觉得用起来很顺手。"
+  ],
+  dryLow: [
+    "需要的不是氧气——是被稳稳接住的那个瞬间。",
+    "对温度的需求，也许瞒不过任何一双愿意多看一秒的眼睛。",
+    "渴望连接。像一株需要频繁浇水的小东西。这没什么不对。",
+    "柔软不是弱点。是还没有对这世界彻底失望的证据——珍贵的证据。",
+    "敢于说出需要，在某个维度上，是一种常被低估的勇气。",
+    "不太擅长独自太久。孤独在这里不是修行，是一点点被消耗。",
+    "像一株需要偶尔被注视的植物。不需要太多，但不能完全没有。"
+  ],
+  bloomHigh: [
+    "体内也许藏着某种间歇性的火山——平时沉默，某天夜里忽然很烫。",
+    "创造力像间歇泉。安静的时候像睡着了，醒来的时候整片天空都在震。",
+    "精神世界过于活跃。活跃到有时候会不小心烧到自己，留下焦痕。",
+    "按部就班的生活，怎么说呢——像是穿着不太合身的衣服。",
+    "热情是一种双刃的东西。能劈开一条路，也能把自己划出一道细口子。",
+    "身上有一种说不清的魅力。像一场没人控制、也不太需要控制的野火。",
+    "爆发的冲动是天生的。怎么和它相处，是另一个还在进行的题目。"
+  ],
+  bloomLow: [
+    "力量像地下暗河。不喧哗，不溅起水花，但从未真正停止流动。",
+    "不需要壮观的绽放来证明什么。存在本身，在某个时刻已是足够的证据。",
+    "节奏慢。但从不倒退。像钟乳石在黑暗里，一千年长一厘米。",
+    "不怎么追赶花期。也许是一株常青的植物，四季都是差不多的绿。",
+    "内心没有火山，但有海——很深，表面总是平静得像一面镜子。",
+    "比较安静的那种绽放。不需要观众，只需要一点点光和偶尔的水。",
+    "安静不是空洞。是已经不怎么需要用声音，来确认自己在不在。"
+  ],
+  soilHigh: [
+    "对'家'这个词，有一种难以用逻辑解释的依恋。",
+    "需要一个锚——一个能把根系，悄悄地、放心地扎下去的地方。",
+    "对稳定的需求，也许比大多数人都更沉。安全感是某种不可再生的矿藏。",
+    "不是恋家。是需要一个能让自己完整呼吸的空间，一个不会被突然抽走的角落。",
+    "根系很深。深到一旦种下去了，拔起来会带着好多土和碎掉的细根。",
+    "把房间布置成一个柔软的茧——不是为了逃避世界，是为了偶尔接住自己。",
+    "归属感，在某个维度上，不是加分项。是呼吸本身。"
+  ],
+  soilLow: [
+    "像一阵不太愿停留的风。从不为某一片具体的土地，收起自己流动的形状。",
+    "漂泊也许是某种与生俱来的本能——不是没有根，是根在移动的过程中。",
+    "不需要固定地址。需要的是那种能随时出发的、轻飘飘的自由。",
+    "房子像帐篷。搭好了，也随时可以拆。拆的时候不会太难过。",
+    "在流动中，找到了比静止更深的某种平静——水在不流的时候，反而容易浑浊。",
+    "当有人说'你不太安定'时，心里想的也许是：我只是不需要那么多。",
+    "根不扎在土里。扎在每一个曾经让心跳慢了半拍的瞬间里。"
+  ]
+};
+
+// 共生困境 — <50字，数组形式
+const whyDieFragments = {
+  lightHigh_why: [
+    "花死于忽远忽近的温度——只在心情好的时候，才记得它们还在角落里等着。",
+    "情绪高昂时能把植物宠成温室里的王，低落时连投去一瞥都觉得费力。",
+    "关注像聚光灯，灼热但短暂。植物熬不过那些漫长的、没有光照的间歇。",
+    "出门去追逐什么的时候，植物在家枯坐。而植物，不会发消息提醒你回来。",
+    "对外界的热情让角落里的绿植以为自己被遗忘在了一座孤岛上。",
+    "给出去的温暖像脉冲星的信号——有，但间隔太久，久到对方以为断了联系。"
+  ],
+  lightLow_why: [
+    "房间太安静了。植物走进来，被庞大寂静吞没，找不到任何生命的迹象。",
+    "活得太像背景音了。连植物都分不清，这房间里到底有没有一个在呼吸的人。",
+    "存在感淡到植物以为这间屋子是空的——连水龙头都很少被拧开。",
+    "不是故意冷落它。只是习惯了独自待在安静里。但植物也需要一点微小的声响。",
+    "太安静了。连浇水都不发出声音。植物不确定这是一场仪式，还是例行公事。",
+    "植物需要的'人气'不是噪音——是走动时带起的微风。这房间太静止了。"
+  ],
+  dryHigh_why: [
+    "连自己都懒得浇灌。那些需要日日呵护的植物，感受不到被需要的可能。",
+    "独立性太完整了。完整到植物觉得自己可有可无——像一个多余的装饰。",
+    "对'需要'这个词有些过敏。植物需要你，但你自己连需要什么都不太想说。",
+    "太习惯自给自足了。在某个角落里，园艺属于'不必要的依赖关系'。",
+    "植物从你眼里读到的不是关爱，是一种温和的、不声张的距离感。",
+    "情感自洽度高到植物觉得自己是多余的——像一个不知该放在哪里的摆件。"
+  ],
+  dryLow_why: [
+    "不是干死的。是被过于稠密的在意淹死的——一天浇好几次，每次都很多。",
+    "把植物当成情绪的载体。心情好的时候洒一点，不好的时候整壶倒下去。",
+    "关心有时候很密集。像细密的雨，下个不停，但没有留给植物喘息的间隙。",
+    "植物被这份在意窒息了。根部开始腐烂的时候，它想停，但张不开口。",
+    "给的也许不是爱，是焦虑的转移。植物接住的不是水，是一些不太安稳的情绪。",
+    "总是担心给得不够多。但从来没有问过那盆安静的绿色：你需要吗。"
+  ],
+  bloomHigh_why: [
+    "刚买时视若珍宝。一旦热情褪去，就任由它在窗台上独自经历季节更替。",
+    "把植物当成灵感的来源。灵感一来就买，灵感走了就忘在阳台的某个位置。",
+    "兴趣的周期太短了。一盆绿萝还没服盆，注意力已经跳到了第三个方向。",
+    "种花像一场美学的冲动——高潮过后，作品被堆进储藏室，蒙上细尘。",
+    "买的时候发誓要给它最好的。三个月后，在阳台角落里发现了一株干枯的什么。",
+    "不是不爱。是爱得太快太猛，植物跟不上这种速度，直接被甩下了车。"
+  ],
+  bloomLow_why: [
+    "从不忘记浇水。但浇水的时候，几乎没有看过它一眼。",
+    "像一个尽职的影子，完成了所有养护流程，唯独忘了停下来，看一眼。",
+    "太按部就班了。植物感受不到温度，只感受到一阵阵机械的、有规律的风。",
+    "把浇水变成了任务，而不是一次安静的相遇。植物感觉到了某种温柔的敷衍。",
+    "负责是一种淡淡的距离。植物满足了物理需要，在精神上一点点枯萎了。",
+    "从来不让植物死。但也从来不让它真正活。它只是存在，像某种习惯。"
+  ],
+  soilHigh_why: [
+    "一片枯叶就焦虑一整夜。过度的保护，让它们丧失了抵抗一阵微风的能力。",
+    "把花盆当成需要监控的什么。每一个虫洞都是一场需要解决的紧张。",
+    "关心太具体了——温度、湿度、光照，精确到不允许任何偏差。",
+    "害怕失去。所以用太多干预来防御。植物在这份不安里，失去了某种野性。",
+    "不是在养花。是在做一场关于不确定性的风险管理。未知让人不安。",
+    "想把所有变量都捏在手里。但生命有意思的地方，就在于有些东西捏不住。"
+  ],
+  soilLow_why: [
+    "灵魂在很远的地方飘着。植物跟不上这种速度，在某个安静的午后枯萎了。",
+    "对'固定'有些不适。花盆在眼里，像一个过于沉重的承诺。",
+    "无法承诺太长的关系。不是不珍惜，是怕承诺之后发现自己做不到。",
+    "给不了植物一个稳定的角落。因为自己都还没有找到那个角落。",
+    "害怕扎根。害怕把种子埋进土里，意味着不能再走了。",
+    "不是不想负责。只是担心自己还没准备好，就给了对方不该有的期待。"
+  ]
+};
+
+// 暗面暗号 — <50字，数组形式
+const shadowFragments = {
+  lightHigh_shadow: [
+    "笑得最灿烂的时候，耳机里的白噪音也许开到了最大。一边被注视，一边在心里轻轻退后。",
+    "让每个人觉得被关注了——但没有人真正注意到你。这种微妙的落差，也许让人上瘾。",
+    "人群中央的孤独感，在某些时刻反而最浓。站在最亮的地方，四周却像毛玻璃。",
+    "社交的方式是输出很多，接收很少。说了很多话，听不到自己真正想说的那句。",
+    "在许多人面前点燃篝火，双手却一直浸在看不见的冰水里。",
+    "最亮的光往往投下最深的影子。那个影子，在某些角度，只有自己能看见。"
+  ],
+  lightLow_shadow: [
+    "用'不在乎'伪装着某种渴望，用'不需要'掩着一点孤独。有一团从未点燃的火。",
+    "假装满足于旁观。但内心深处，也许也想被拉上台，跟着跳一支不太会的舞。",
+    "说'一个人挺好的'——说的时候，声音比平时轻了半度。",
+    "把自己放在很低的位置，低到以为没有人会弯腰来找。",
+    "不是不需要这世界。是怕世界不太需要自己，所以抢先一步说了不需要。",
+    "在最安全的距离最远的地方，看着远处的热闹。然后对自己说：大概不太适合那种场合。"
+  ],
+  dryHigh_shadow: [
+    "渴望被同频的灵魂懂得，却在对方靠近时，先一步砌起一道冰凉的墙。",
+    "需要一个懂你的人。但任何尝试走近的人，都要先经过一片没有标牌的冷。",
+    "说'你不懂我'。但也许从没给过人懂的入口——给的只是一些冰凉的碎片。",
+    "盔甲太重了。重到自己都很难脱下，然后觉得奇怪：为什么没有人拥抱。",
+    "筑墙的速度总比敲门声快了一点点。不是没人来敲，是没等到敲就砌好了。",
+    "把冷漠当成一把尺——谁受得了，谁才有资格靠近。但冷意，是会散去的。"
+  ],
+  dryLow_shadow: [
+    "把'没事'挂在嘴边。深夜里独自消化着全世界的、不太属于自己的情绪。",
+    "说'没事'的时候最有事。但希望对方能从这两个字里，读出没说的那些。",
+    "坚强也许是一种保护色。像深水里某种生物的墨——在逃跑之前，先混淆视线。",
+    "不需要帮助——需要的是有人能从'没事'里，听出一点不对劲的尾音。",
+    "承担了太多不属于自己的情绪重量，然后假装它们没有重量。",
+    "把逞强当成一种不说出口的礼仪。但礼仪不能当饭吃，也不能当作安眠。"
+  ],
+  bloomHigh_shadow: [
+    "用很用力的话切断某种关系，深夜里用更用力的内耗惩罚自己。推倒一切，再独自坐在废墟上。",
+    "推倒那座塔的时候最痛快。但看着一地碎片的时候，风忽然有点凉。",
+    "破坏的冲动也许来自一种深层的恐惧——与其等谁来推，不如自己先动手。",
+    "在情绪的过山车上飞快地上去又下来。快到有时候连自己都看不清风景。",
+    "毁了不少东西。不是因为不在意，是因为太在意了，以至于不小心捏碎了。",
+    "害怕被丢下，所以先转身离开。这种逻辑，在深夜的循环里，一遍遍播放。"
+  ],
+  bloomLow_shadow: [
+    "用'随便'绕开了很多决定。害怕选错，于是选择了不选——把方向盘轻轻推给旁边的人。",
+    "不做决定不是因为无所谓。是因为太有所谓了，有所谓到不敢下手。",
+    "'随便'像一块挡箭牌。但箭头，在某个时刻，都静静转向了自己。",
+    "让别人替你做选择，然后自己承担后果。不是随和，是恐惧穿着随和的外衣。",
+    "在人生的每个岔路口站着，等谁推一下。但推你的人，方向也未必是对的。",
+    "把选择权交出去之后，松了一口气。然后在那口气的末尾，尝到一点后味的涩。"
+  ],
+  soilHigh_shadow: [
+    "渴望飞翔又害怕失控。在透明的琥珀里，保持着一种安全的、不会变的姿势。",
+    "把安全感砌成了一座堡垒。砌好之后发现，自己在里面，门从里面打不开。",
+    "过去像一本翻了很多遍的书。每一页都有指纹，每一页都有回不去的温度。",
+    "害怕改变。害怕到宁愿守着不太舒服的此刻，也不愿面对一片不确定的空白。",
+    "在安全区里偶尔不舒服。但外面的不确定，更让人不安。这个悖论，困住了很多。",
+    "想飞。但把翅膀寄存在了过去。过去说：我帮你保管——但你要一直留在这里。"
+  ],
+  soilLow_shadow: [
+    "用'不需要任何人'裹着自己。看到'一人份'三个字时，愣了很短的一瞬。",
+    "告诉自己自由比什么都重要。但自由，在某个深夜，偶尔会改名叫'没人等'。",
+    "太擅长告别了。擅长到有时怀疑，自己是否真正地来过。",
+    "看了很多出发的信息。但没有一个到达的地方，写着熟悉的名字。",
+    "漂泊是一种选择。但有时也会想：有没有一个地方，让人不太想走。",
+    "收藏了很多地方的日落。但从来没见过同一个窗口，太阳升起两次。"
+  ]
+};
+
+// 深夜防锈指南 — <50字，数组形式
+const insomniaFragments = {
+  lightHigh_insomnia: [
+    "关掉所有社交软件。不一定要永远站在亮处——暗面的纹理，有时比光明更细腻。",
+    "今晚试试当观众，而不是台上的那个人。把自己藏进人群里，看看世界不围着转的时候是什么样的。",
+    "不需要回应所有人的等待。关机不是逃跑，是给精神稍微散散热。",
+    "允许自己偶尔消失一小会儿。不在的那几个小时，地球会继续转动，风吹的方向不变。",
+    "今晚的主题：不主动发光。让周围的事物，在你安静的时候，亮给你看。",
+    "把'被需要'从心里那张清单上轻轻地划掉。今晚，只需要被自己轻轻地需要。"
+  ],
+  lightLow_insomnia: [
+    "找一部没有明确情节的影像。让画面流过去就好，不用理解。寂静在某个维度上，是一种解药。",
+    "今晚不需要意义。可以看一会云，看一会天花板上的裂纹——那些裂纹的形状像一张旧地图。",
+    "给自己点一盏很小的灯。不要让夜色完全吞没。光的尺寸不重要，亮着就好。",
+    "安静不是需要修补的东西。不需要用噪音去填满。今晚可以试着享受那种空的质地。",
+    "找一首没有歌词的曲子。闭上眼睛，让那些没有词语的声音，变成一首只属于今晚的什么。",
+    "不一定总在思考。让大脑像旧电视机变成雪花屏——沙沙的，白花花的，没有形状。"
+  ],
+  dryHigh_insomnia: [
+    "洗一个慢一点的热水澡。在蒸汽里想象一场不着急的、优雅的逃亡。",
+    "今晚允许自己脆弱三分钟。三分钟后，可以继续假装不需要谁。但至少有三分钟是真的。",
+    "不是不想依赖——是怕依赖之后，发现不值得。但今晚先不想这个。喝一杯温的牛奶。",
+    "找一本孤独感很重的小说。翻开之后会发现，这座岛上的居民不止一个。",
+    "今晚的小作业：给一个很久没说话的人发一句什么。不用解释为什么突然想起。",
+    "清高是一种温润的美德。但偶尔，也可以让美德请一晚假。"
+  ],
+  dryLow_insomnia: [
+    "给自己准备两份食物，假装有人一起。从一顿饭开始，练习接受温度。",
+    "需要的不多。但今晚，可以允许自己要多一点。没有人会因此说什么。",
+    "发那条编辑了很多遍但始终没发出的消息。结果不重要——重要的是，手指按了发送。",
+    "今晚不要再咀嚼别人的情绪了。那些情绪的主人都睡了。你也可以睡，带着一个空的胃。",
+    "不是麻烦。需要不是负担。今晚就把这句话，在心里慢慢地重复三遍。",
+    "练习说'我需要'——先从不需要回应的事情开始。比如：我需要一杯热的东西。"
+  ],
+  bloomHigh_insomnia: [
+    "把那些翻腾的念头写在纸上。写完之后，可以撕碎。情绪需要出口，但不一定要烧光一切。",
+    "今晚不要做任何重要的决定。大脑此刻是火山活跃期，不太适合签署任何东西。",
+    "把所有想推倒的写在一张纸上。然后把它放进抽屉——明天早上，再决定要不要撕。",
+    "热情是宝藏。但宝藏也需要防火的墙。今晚，试着把自己浸在比较凉的水里。",
+    "深呼吸六次。每呼出去一次，想象在给体内那座滚烫的山，轻轻地降半度。",
+    "今晚不燃烧。今晚只是呼吸，和等待窗外慢慢变亮。不把东西烧掉，也是一种安静的能力。"
+  ],
+  bloomLow_insomnia: [
+    "做一个小小的决定——比如明天想吃什么。从一个煎蛋开始，重新握住一点什么。",
+    "那种温水模式可以先暂停一下。今晚做一件小到几乎没有后果的事。",
+    "从床上坐起来，把书桌上任何一个东西挪动一厘米。这是今天主动改变的第一个小小的印记。",
+    "不需要一次翻盘。只需要今晚比昨晚多一个念头：也许明天，还可以做点什么。",
+    "不要想太远的计划。今晚的计划只有两步：关掉灯，闭上眼睛。两步，就够了。",
+    "微弱的方向感也是方向。像舌尖尝到空气里某种季节的味道，确认自己在这个世界的方位。"
+  ],
+  soilHigh_insomnia: [
+    "把房间弄乱一点点。让一小片意外在角落里发生。打破外壳，气流才能进来。",
+    "今晚故意不叠衣服，让它们像落叶一样散在椅子上。乱一点点，不会怎样的。",
+    "秩序感是护城河。但今晚，可以降一次吊桥，看看桥那边，吹来的风是什么温度。",
+    "尝试一件很小很小的、从未做过的事：倒着走几步，用另一只手写一个字，在玻璃上呵一口气画点什么。",
+    "在安全区里待了很久。今晚用一分钟，做一件有点心跳的事。一分钟，就够了。",
+    "不需要一直握着。让今晚变成一场很小的实验：放开一小步，看看会发生什么。"
+  ],
+  soilLow_insomnia: [
+    "抬头看一看星星。在某个巨大的尺度上，存在本身就是一件不太容易的事。",
+    "漂泊不是选的——是流进生命里的一条河。今晚就在河上漂着，不做任何抵抗。",
+    "不要急着找方向。有些方向，不是找到的。是漂着漂着，自己浮上来的。",
+    "今晚不需要地图。可能已经在某条看不见的轨道上——那条轨道，是自己的。",
+    "去看看窗外的夜空。当你感到自己的渺小，漂泊忽然变成了一件有点浪漫的事。",
+    "走过的每一段路，在某个维度上都是对的路。因为走过了，它就属于你了。今晚，不需要确认什么。"
+  ]
+};
+
+// ==================== 动态拼接引擎（升级为32种结果） ====================
+
+// 获取 Dry/Soil 组合键
+function getDrySoilKey(scores) {
+  const d = scores.dry >= 50 ? '高燥' : '低燥';
+  const s = scores.soil >= 50 ? '高土' : '低土';
+  return d + s;
+}
+
+// 从花卉池随机选取
+function pickSuitableFlower(scores) {
+  const key = getDrySoilKey(scores);
+  const pool = suitableFlowers[key] || suitableFlowers["低燥低土"];
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx];
+}
+
+// [重构逻辑：混沌因子融入搭子选取]
+function pickPartnerPlant(scores) {
+  const seed = (scores.light * 7 + scores.dry * 13 + scores.bloom * 23 + scores.soil * 37) % partnerPlants.length;
+  const offset = Math.floor((Math.random() + chaosSeed * 100) * 5) % 5;
+  const idx = (seed + offset) % partnerPlants.length;
+  return partnerPlants[idx];
+}
+
+// [重构：共振植物谱系池 — 32条目，每相位3段备选文案 + 生活植物分类注入]
+// easyToKeep 池: 月季/玫瑰/绿萝/虎皮兰/薄荷/迷迭香
+// hardToKeep 池: 琴叶榕/发财树/栀子花/网纹草/铁线蕨
+const _easyPool = ['月季','玫瑰','绿萝','虎皮兰','薄荷','迷迭香','芦荟','吊兰'];
+const _hardPool = ['琴叶榕','发财树','栀子花','网纹草','铁线蕨','杜鹃','倒挂金钟'];
+const _hardWhy  = {
+  '琴叶榕':'对湿度极度敏感，稍干即焦边','发财树':'浇水稍多就烂根，极难把握','栀子花':'北方水质偏碱便黄叶凋零',
+  '网纹草':'一旦缺水便整株萎蔫，不可逆','铁线蕨':'空气一干燥便枯卷如纸','杜鹃':'喜酸怕碱，水土不服便落叶',
+  '倒挂金钟':'怕热惧晒，夏季稍不留神便死去'
+};
+
+const resonancePlantPool = [
+  // [0-7] 发散相位 — 初生/锐利
+  { name:'银叶蕨',    mutters:[
+    '银灰叶片像月光刚落在石头上——还没被太阳晒暖。','刚刚伸展开的银色，对光的方向还不确定。每一片叶子的背面，都在试探空气的温度。','还没来得及变深沉，但那层浅银色的绒毛，也许是一种更真实的东西：一种还未被风磨损的质地。'
+  ], easyToKeep:['绿萝','薄荷'], hardToKeep:['琴叶榕','栀子花'] },
+  { name:'黑法师',    mutters:[
+    '墨紫的莲座在暗处愈发深邃——像一盏还没被拧开的灯。','天色暗下来的时候，它的颜色反而更清晰了。刚展开的叶片边缘，还带着一点不确定的弧度。','也许它不是黑。它只是在用最深的紫色，确认自己不会被任何光线轻易定义。'
+  ], easyToKeep:['虎皮兰','迷迭香'], hardToKeep:['铁线蕨','网纹草'] },
+  { name:'苔藓球',    mutters:[
+    '一团刚刚苏醒的潮湿宇宙。每一根细丝都在用极慢的速度，试探周围空气的味道。','绿得有点笨拙。不像那些规整的盆栽——它不知道自己要长成什么形状，只是慢慢地、胡乱地绿着。','安静到几乎不被察觉。但在某个角度，能看见它表面那一层极细的水珠——那是它和世界对话的方式。'
+  ], easyToKeep:['绿萝','吊兰'], hardToKeep:['发财树','栀子花'] },
+  { name:'白脉椒草',  mutters:[
+    '叶脉上的白线像刚画的草图。方向还在调整，但铅笔已经不抖了。','一片叶子上有无数条细细的白纹——每一条都通向某个还没想清楚的方向。但这种凌乱，也许比整齐更接近真实。','在暗处也能保持那份清醒的白色。不需要被看见，但一直在用最细的线条勾勒自己。'
+  ], easyToKeep:['月季','薄荷'], hardToKeep:['琴叶榕','铁线蕨'] },
+  { name:'铁筷子',    mutters:[
+    '在别人都沉睡的季节里冒出第一片叶子。不是倔强——是体内有什么在说：现在。','寒冬里的异数。也许不是选择了艰难的路，只是体内那个闹钟，和别人不太一样。','还没学会在春天开花。但这朵冬天的花，在霜里站得比任何温室里的都直。'
+  ], easyToKeep:['迷迭香','虎皮兰'], hardToKeep:['网纹草','杜鹃'] },
+  { name:'岩白菜',    mutters:[
+    '叶片粗粝得像被风沙磨过——但翻开背面，是某种还没被看见的柔软。','刚搬进这块石头缝里，根还没扎稳。但叶子已经很硬了——也许是一种提前穿上的盔甲。','有人路过时会觉得它不好惹。但谁也没翻过那层硬壳，看看里面藏着什么。'
+  ], easyToKeep:['芦荟','绿萝'], hardToKeep:['发财树','倒挂金钟'] },
+  { name:'狼尾蕨',    mutters:[
+    '毛茸茸的根茎探出盆沿，像在用触觉测试这个世界的温度。还没有答案，但触角已经伸出去了。','不靠眼睛判断方向。每一根绒毛都是一只试探的手指——相信触觉胜过相信光。','有点笨拙地爬着，方向时左时右。但方向本身也许不重要——重要的是还在爬。'
+  ], easyToKeep:['薄荷','月季'], hardToKeep:['栀子花','琴叶榕'] },
+  { name:'鹿角蕨',    mutters:[
+    '挂在墙上，刚适应了不沾土的生存方式。孢子叶还没完全展开，像一双还没学会飞的翅膀。','不用土也能活——这件事刚被证明。还在慢慢习惯，那种没有支撑的下坠感其实也是一种方向。','悬浮在半空，根须在空气里画着看不见的弧线。不是不想落地——是还没找到合适的墙面。'
+  ], easyToKeep:['吊兰','绿萝'], hardToKeep:['铁线蕨','发财树'] },
+
+  // [8-15] 收敛相位 — 沉淀/温润
+  { name:'紫叶酢浆草', mutters:[
+    '三角形叶片在黄昏准时合拢。不需要提醒——身体已经记住了，什么时候该收回触角。','已经不怎么在白天过度展开了。合拢的姿态不是防御，是一种安静的、只留给自己的仪式。','紫得刚刚好。不太深，不太浅——像是调了很久才调出的颜色。不急，反正夜色还长。'
+  ], easyToKeep:['玫瑰','虎皮兰'], hardToKeep:['网纹草','栀子花'] },
+  { name:'佛珠',      mutters:[
+    '一串圆润的绿色句号从高处垂落。不再急着叙事，只是安静地画着那些完整的、小小的停顿。','每一颗珠子都是被时间磨圆的——以前也许也是尖锐的，但现在只想圆润地、不扎人地垂着。','慢慢长，慢慢圆。一串绿色的省略号，不再需要每一点都说得清清楚楚。'
+  ], easyToKeep:['绿萝','薄荷'], hardToKeep:['琴叶榕','杜鹃'] },
+  { name:'冰灯玉露',  mutters:[
+    '半透明的窗面在光下微微亮着。那种亮不是刻意的——是水在体内慢慢流动时的自然折射。','把水分一点一点藏在叶肉里。不急，够用。透明是一种经过很多次干渴之后才学会的节制。','光能穿过它，但它不发光。它只是让光经过——像一个安静的、透明的容器。'
+  ], easyToKeep:['迷迭香','芦荟'], hardToKeep:['铁线蕨','发财树'] },
+  { name:'彩春峰',    mutters:[
+    '珊瑚状的茎干不再试图笔直。扭曲的弧度是一种被时间弯折后的姿态——不再抗拒弯曲。','形状有点奇怪，但已经不怎么在意了。奇怪也是一种形状，而且比大多数形状更有记忆点。','以前也许也向往过挺拔。但弯了这么多年之后发现，弯曲有弯曲的风景——从侧面看，像一座小小的山。'
+  ], easyToKeep:['虎皮兰','月季'], hardToKeep:['栀子花','网纹草'] },
+  { name:'地衣苔藓',  mutters:[
+    '最古老的沉默。不需要根，不需要方向——只是附着，只是绿着，只是不声不响地活着。','在石头上待了太多年了。久到石头表面都有了它的温度。不再需要语言——存在就是一种语言。','漂泊这个词对它来说太重了。它只是在哪里都能绿——石头上、树皮上、废弃的墙缝里。到哪里，哪里就是家。'
+  ], easyToKeep:['吊兰','薄荷'], hardToKeep:['琴叶榕','倒挂金钟'] },
+  { name:'绿天鹅绒海芋', mutters:[
+    '叶片如丝绒——那种深沉的质地是时间给的，不是天生的。每一道光打上去，都像被轻轻收进了绒毛里。','不再需要用颜色吸引什么。质感本身，就是一种不需要解释的、温柔的重量。','摸上去的瞬间，手指会不自觉地慢下来。那种绒不是柔软，是某种对速度的拒绝。'
+  ], easyToKeep:['玫瑰','绿萝'], hardToKeep:['铁线蕨','发财树'] },
+  { name:'白锦合果芋', mutters:[
+    '白色斑纹不再追求对称。不对称的美是一种缓慢习得的松弛——不再需要两边一模一样才安心。','白斑随机洒在绿叶上，像某个下午无心泼出去的颜料。不必完美，不必均匀，甚至不必被理解。','每一片叶子的纹理都不同。但正是这种差异，让整株植物看起来不那么像是被设计好的。'
+  ], easyToKeep:['迷迭香','芦荟'], hardToKeep:['栀子花','杜鹃'] },
+  { name:'龟背竹',    mutters:[
+    '开裂的叶片不是裂痕——是主动留出的透气孔。完整不是目标，通透也许是。经过很多年才会有的领悟。','以前也试图保持完整。但某天雨后，第一道缝隙自己裂开了——然后发现，透气的感觉真好。','缝隙是一种豁达。不再试图把一切包在一张完整的叶子里——让光、让风、让所有不确定的东西穿过去。'
+  ], easyToKeep:['绿萝','虎皮兰'], hardToKeep:['网纹草','琴叶榕'] },
+
+  // [16-23] 发散相位（第二组）— 还在寻找的
+  { name:'仙洞龟背竹', mutters:[
+    '叶片上的洞是天生的窗户。透过自己看世界——这也许是一种还没有被命名的天赋。','每一个孔洞都像一个正在形成的观点。看出去的风景，被切成不规则的碎片——但拼在一起，也许比完整更有意思。','不算完整。但那些漏光的地方，刚好让阳光落在另一片叶子上。'
+  ], easyToKeep:['薄荷','月季'], hardToKeep:['铁线蕨','发财树'] },
+  { name:'铁兰',      mutters:[
+    '银色鳞片覆满细叶，在空气里保持悬浮的姿势。不落地不是不安——是还没有找到值得落下去的那片土壤。','不需要盆，不需要土。这种轻盈有时候也是一种负担——因为没有重量，风一吹就走了。','在空气里挂了很多年。偶尔也想沾一点土，但怕沾了土就再也回不到那种透明的、什么也不属于的状态。'
+  ], easyToKeep:['吊兰','迷迭香'], hardToKeep:['栀子花','倒挂金钟'] },
+  { name:'绿萝大理石皇后', mutters:[
+    '白绿斑驳的叶面像打翻的翡翠碎片。破碎不是终结——某种碎片在光线的作用下，反而折射出更复杂的绿。','不像纯绿色的同类那样规整。斑驳是一种拒绝同质化的方式——宁愿碎一点，也不要和别人一模一样。','每一片叶子都像是随机生成的。没有两片相同的纹理——这也许就是它最安静的反叛。'
+  ], easyToKeep:['绿萝','芦荟'], hardToKeep:['琴叶榕','网纹草'] },
+  { name:'姬凤梨',    mutters:[
+    '贴着地面长的莲花座——不仰头，但每一寸蔓延都是一种沉默的扩张。不需要高度来证明存在。','矮矮的、贴着土的。但这种贴地的方式，让它比任何高大的植物都更了解泥土的温度和味道。','不开花的时候像一丛安静的草。但它的安静，在某个角度，比那些开花的更让人想停下来看一看。'
+  ], easyToKeep:['虎皮兰','玫瑰'], hardToKeep:['杜鹃','铁线蕨'] },
+  { name:'吹雪之松锦', mutters:[
+    '粉白斑纹如初雪落在松针上——还没来得及融化，就被某种力量固定住了。短暂变成了永恒，但它还在习惯这种静止。','不像真的雪会化。这片粉白，固执地留在叶片上——是一种对「转瞬即逝」的反抗。','很安静，但那种安静里藏着一点点不甘——不想只是漂亮，还想被长久地记住。'
+  ], easyToKeep:['薄荷','绿萝'], hardToKeep:['发财树','栀子花'] },
+  { name:'尼罗河睡莲', mutters:[
+    '花瓣在晨光中打开，黄昏沉入水底。这一天的轮回刚刚开始——它还在试探：今天要不要开得比昨天大一点点？','浮在水面上的姿态看起来很从容。但水下的茎，一直在用看不见的力气对抗水流。','每天一次的开合，像一种呼吸练习。还没有完全掌握，但节奏感已经开始有了。'
+  ], easyToKeep:['月季','迷迭香'], hardToKeep:['琴叶榕','网纹草'] },
+  { name:'白蝶合果芋', mutters:[
+    '叶片如白蝶停在绿枝上——翅膀微颤，还没决定要不要飞。那种犹豫不是胆怯，是在等一阵对的风。','不是不会飞。是飞之前那个姿势，在很多时刻比飞行本身更值得被看见。','停在枝头很久了。也许怕飞走了就再也回不到这枝可以停靠的绿。'
+  ], easyToKeep:['吊兰','芦荟'], hardToKeep:['铁线蕨','倒挂金钟'] },
+  { name:'冰梅多肉',   mutters:[
+    '叶尖一点胭脂红在冷白底色上晕开。那一抹红像是刚学会害羞——还没被时光洗淡。','克制中那一点点没忍住的红，是整株植物最诚实的地方。其他部分都在说「我不需要」，只有那一点红在说「其实有一点想」。','冷白的基调下，那抹胭脂像某种不易察觉的温度。不是热的——是温的，刚好够让人想再靠近一点。'
+  ], easyToKeep:['玫瑰','虎皮兰'], hardToKeep:['栀子花','杜鹃'] },
+
+  // [24-31] 收敛相位（第二组）— 已经沉淀的
+  { name:'月光椒草',  mutters:[
+    '银灰色叶片在暗处泛着微光。不再需要太阳——自己就能亮一会儿，亮到刚好够看清自己的轮廓。','那层银灰不是天生的。是经过很多个没有阳光的日子之后，慢慢从体内渗出来的光。','不需要被照亮。但那种微光，在某些角度，比任何反射都更接近光源本身。'
+  ], easyToKeep:['绿萝','薄荷'], hardToKeep:['琴叶榕','发财树'] },
+  { name:'弹簧草',    mutters:[
+    '螺旋不再绷得那么紧了。时间教会它的不是拉直——是在弯曲中，找到一种比直线更自然的节奏。','以前也努力想长直。但某天风把它吹弯了，然后发现——弯着的样子，其实比直着更舒服。','一圈一圈盘旋着——不急着往上，也不急着开花。曲线有曲线的速度，而这种速度，刚刚好。'
+  ], easyToKeep:['迷迭香','虎皮兰'], hardToKeep:['网纹草','铁线蕨'] },
+  { name:'皱叶冰水花', mutters:[
+    '叶面的凹凸不再试图被抚平。那些坑坑洼洼，在某个下午的光线里，形成了一种比平整更深邃的美。','不平整不是缺陷。是雨滴、是虫咬、是被挪来挪去时留下的一点点生活的证据。','曾经也羡慕那些完美无瑕的叶片。但现在学会了用指尖慢慢划过那些凹痕——像在读一本只有自己能懂的书。'
+  ], easyToKeep:['芦荟','月季'], hardToKeep:['栀子花','倒挂金钟'] },
+  { name:'银剑蔓绿绒',  mutters:[
+    '银蓝色叶片带着一种不需要解释的冷感。不是疏离——是已经学会了在距离中找到最舒适的尺度。','冷不是没有温度。是一种低了好几度的温柔——不太烫，但刚好能在冬天感到一点点暖意。','那种银蓝像某种已经沉淀下来的情绪。不再翻涌——只是安静地、蓝蓝地绿着。'
+  ], easyToKeep:['吊兰','玫瑰'], hardToKeep:['发财树','杜鹃'] },
+  { name:'碧雷鼓',    mutters:[
+    '圆鼓鼓的叶片像一面面小型盾牌。不再需要进攻——防御本身，在某个维度上已经变成了一种从容的存在。','不是害怕受伤。只是更清楚自己需要多少光、多少水、多少距离——并且不再为此道歉。','鼓起来不是因为膨胀，是因为里面装满了足够多的自己的东西。不再需要外界的肯定来填满空隙。'
+  ], easyToKeep:['绿萝','薄荷'], hardToKeep:['琴叶榕','铁线蕨'] },
+  { name:'幽灵蔓绿绒', mutters:[
+    '半透明的叶片像某种介于存在与不存在之间的状态。不再追求被看见——在某种半透明的边界里，找到了最安心的位置。','不是隐身，只是选择了一种不那么显眼的方式存在。能看见它的人，不需要它发光。','透明是一种力量。不再需要用颜色或形状来证明什么——光是透过去的那些光斑，就足够了。'
+  ], easyToKeep:['虎皮兰','迷迭香'], hardToKeep:['网纹草','栀子花'] },
+  { name:'银霜女王',  mutters:[
+    '一层薄薄的银霜覆在叶面，像清晨还没化开的薄雾。那种冷是温柔的——不再刺骨，只是刚刚好让人清醒。','霜不是冬天的惩罚。是时间留下的一层薄薄的保护膜——以前的伤，现在看起来像勋章。','银色的光泽不再需要打磨。那种钝钝的、不太反光的光泽，比镜面更经得起注视。'
+  ], easyToKeep:['玫瑰','芦荟'], hardToKeep:['发财树','倒挂金钟'] },
+  { name:'午夜蓝柏',  mutters:[
+    '在夜色里几乎隐形——但那种蓝黑的质感，在月光下会隐隐泛出一种接近星空的深色。不再需要白天的注视。','不是为了躲藏才选择深色。是在所有的颜色都褪去之后，发现最深的那种蓝，刚好能接住夜晚所有的光。','安静地站在角落里。不摇、不响、不开花。但靠近的时候，会闻到一种很淡很淡的、只有在午夜才会散发的木质香。'
+  ], easyToKeep:['绿萝','吊兰'], hardToKeep:['铁线蕨','杜鹃'] }
+];
+
+// [重构：共振植物选取 — 基于新32条目池，每条随机抽取1段mutter + 提取生活植物数据]
+function pickResonancePlants(scores) {
+  const seedBase = (scores.light * 3 + scores.dry * 7 + scores.bloom * 11 + scores.soil * 17);
+  const shuffled = [...resonancePlantPool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const pseudoRand = ((seedBase * (i + 1) * 13 + chaosSeed * 10000) % 1000) / 1000;
+    const j = Math.floor(pseudoRand * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const count = (seedBase + scores.chronos + Math.floor(chaosSeed * 10)) % 3 === 0 ? 3 : 2;
+  const picked = shuffled.slice(0, count);
+
+  // 从每条中随机抽取1段 mutter（3段备选）
+  const resonanceItems = picked.map(p => ({
+    name: p.name,
+    mutter: p.mutters[Math.floor(Math.random() * p.mutters.length)]
+  }));
+
+  // 聚合 easyToKeep / hardToKeep（去重）
+  const easySet = new Set();
+  const hardSet = new Set();
+  const hardReasonMap = {};
+  picked.forEach(p => {
+    (p.easyToKeep || []).forEach(e => easySet.add(e));
+    (p.hardToKeep || []).forEach(h => {
+      hardSet.add(h);
+      if (_hardWhy[h] && !hardReasonMap[h]) hardReasonMap[h] = _hardWhy[h];
+    });
+  });
+
+  return {
+    items: resonanceItems,
+    easyToKeep: [...easySet].slice(0, 4),
+    hardToKeep: [...hardSet].slice(0, 4).map(h => ({ name: h, reason: hardReasonMap[h] || '' }))
+  };
+}
+
+
+// [优化：通用加权随机抽取器 — 基于五维分值+混沌因子+盐值生成伪随机索引]
+function weightedPick(arr, scores, salt) {
+  if (!arr || arr.length === 0) return '';
+  if (arr.length === 1) return arr[0];
+  const seed = (scores.light * salt + scores.dry * (salt + 1) * 3 + scores.bloom * (salt + 2) * 7 + scores.soil * (salt + 3) * 13 + scores.chronos * (salt + 4));
+  const idx = Math.abs(Math.floor((seed * chaosSeed * 10000 + Math.random() * 137) % arr.length));
+  return arr[idx % arr.length];
+}
+
+// ==================== 概率性连续选择器（替代二元硬阈值） ====================
+// [核心：分数值作为高维池选择概率，而非 if >= 50。分数越高，越倾向高维池。
+//  这使得边界值（如51分和49分）不再产生截然不同的结果。]
+function pickContinuousFragment(score, highPool, lowPool, scores, salt) {
+  const highProb = Math.max(0, Math.min(1, score / 100));
+  if (Math.random() < highProb) {
+    return weightedPick(highPool, scores, salt);
+  } else {
+    return weightedPick(lowPool, scores, salt);
+  }
+}
+
+// 动态拼接灵魂素描 — 概率性连续维度选择（废弃二元硬阈值）
+function buildSketch(scores) {
+  const parts = [];
+  parts.push(pickContinuousFragment(scores.light, sketchFragments.lightHigh, sketchFragments.lightLow, scores, 1));
+  parts.push(pickContinuousFragment(scores.dry,   sketchFragments.dryHigh,   sketchFragments.dryLow,   scores, 2));
+  parts.push(pickContinuousFragment(scores.bloom, sketchFragments.bloomHigh, sketchFragments.bloomLow, scores, 3));
+  parts.push(pickContinuousFragment(scores.soil,  sketchFragments.soilHigh,  sketchFragments.soilLow,  scores, 4));
+  return parts.join(' ');
+}
+
+// 共生困境 — 概率性连续维度选择
+function buildWhyDie(scores) {
+  const parts = [];
+  parts.push(pickContinuousFragment(scores.light, whyDieFragments.lightHigh_why, whyDieFragments.lightLow_why, scores, 5));
+  parts.push(pickContinuousFragment(scores.dry,   whyDieFragments.dryHigh_why,   whyDieFragments.dryLow_why,   scores, 6));
+  parts.push(pickContinuousFragment(scores.bloom, whyDieFragments.bloomHigh_why, whyDieFragments.bloomLow_why, scores, 7));
+  parts.push(pickContinuousFragment(scores.soil,  whyDieFragments.soilHigh_why,  whyDieFragments.soilLow_why,  scores, 8));
+  return parts.join(' ');
+}
+
+// 暗面暗号 — 概率性连续维度选择
+function buildShadowSlice(scores) {
+  const parts = [];
+  parts.push(pickContinuousFragment(scores.light, shadowFragments.lightHigh_shadow, shadowFragments.lightLow_shadow, scores, 9));
+  parts.push(pickContinuousFragment(scores.dry,   shadowFragments.dryHigh_shadow,   shadowFragments.dryLow_shadow,   scores, 10));
+  parts.push(pickContinuousFragment(scores.bloom, shadowFragments.bloomHigh_shadow, shadowFragments.bloomLow_shadow, scores, 11));
+  parts.push(pickContinuousFragment(scores.soil,  shadowFragments.soilHigh_shadow,  shadowFragments.soilLow_shadow,  scores, 12));
+  return parts.join(' ');
+}
+
+// 防锈指南 — 概率性连续维度选择
+function buildInsomnia(scores) {
+  const parts = [];
+  parts.push(pickContinuousFragment(scores.light, insomniaFragments.lightHigh_insomnia, insomniaFragments.lightLow_insomnia, scores, 13));
+  parts.push(pickContinuousFragment(scores.dry,   insomniaFragments.dryHigh_insomnia,   insomniaFragments.dryLow_insomnia,   scores, 14));
+  parts.push(pickContinuousFragment(scores.bloom, insomniaFragments.bloomHigh_insomnia, insomniaFragments.bloomLow_insomnia, scores, 15));
+  parts.push(pickContinuousFragment(scores.soil,  insomniaFragments.soilHigh_insomnia,  insomniaFragments.soilLow_insomnia,  scores, 16));
+  return parts.join(' ');
+}
+
+// 胶囊标签 — 基于植物类别键映射，完全消除二元 if 判断
+function buildTags(categoryKey) {
+  const tagMap = {
+    "HHHH": ['一场安静的风暴', '过分的完整', '两股相悖的潮水'],
+    "HHHL": ['锋利的温柔', '不长根', '向风而走'],
+    "HHLH": ['被看见的渴望', '安全是一种沉溺', '不动声色的城墙'],
+    "HHLL": ['远远地站着', '柔软过敏', '线条与留白'],
+    "LHHH": ['废墟里开花', '暗中燃烧', '破碎自有其美'],
+    "LHHL": ['深夜才睁开的眼睛', '某种危险的温度', '旁观者'],
+    "LHLH": ['微苦之后', '深渊里的光', '旧时代的回音'],
+    "LHLL": ['深水区的居民', '不需要锚', '一种遥远的疏离'],
+    "HLHH": ['情绪的河道', '过度的包容', '看不见的交付'],
+    "HLHL": ['瞬间的形状', '热得快，凉得也快', '向内塌陷'],
+    "HLLH": ['琥珀里的标本', '精致的壳', '选择困难症候群'],
+    "HLLL": ['一个人的岛屿', '轻度的存在', '无声自愈者'],
+    "LLHH": ['藤蔓的缠绕', '情感深海', '相互依存'],
+    "LLHL": ['敏感的触角', '情绪的海绵', '过度共鸣'],
+    "LLLH": ['安静地观察', '怕选错', '温和的存在'],
+    "LLLL": ['漂浮于真空', '最轻的疏离', '宇宙的独白']
+  };
+
+  const tags = [...(tagMap[categoryKey] || ['漂浮于真空', '最轻的疏离', '宇宙的独白'])];
+
+  if (Math.random() > 0.5) tags.push('偏执的诗意');
+  else tags.push('意识的漫游');
+
+  return tags;
+}
+
+// ==================== 基于距离倒数的加权随机植物匹配引擎 ====================
+// [核心算法：(1) 计算用户五维得分与16种植物理想坐标的欧氏距离，
+//  以距离倒数为权重进行带权随机抽取——越近概率越高，但所有植物都有机会。
+//  (2) 根据 Chronos 正负值确定相位（明/暗），共16×2=32种可能结果。]
+
+// 为16种基础植物生成5维理想坐标
+function get16BaseCoords() {
+  const bases = [];
+  for (const [key, group] of Object.entries(primaryPlants)) {
+    const h = key[0] === 'H' ? 70 : 30;
+    const d = key[1] === 'H' ? 70 : 30;
+    const b = key[2] === 'H' ? 70 : 30;
+    const s = key[3] === 'H' ? 70 : 30;
+    bases.push({
+      key: key,
+      group: group,
+      coord: { light: h, dry: d, bloom: b, soil: s, chronos: 0 }
+    });
+  }
+  return bases;
+}
+
+// 五维欧氏距离
+function euclideanDist(a, b) {
+  const dims = ['light','dry','bloom','soil','chronos'];
+  let sumSq = 0;
+  for (const d of dims) sumSq += (a[d] - b[d]) * (a[d] - b[d]);
+  return Math.sqrt(sumSq);
+}
+
+// 主入口：calculateResult
+// [两步流程：(1) 距离倒数加权随机 → 确定16种植物类别之一
+//           (2) Chronos 正负值 → 确定明/暗相位（正=发散/明，负=收敛/暗）]
+function calculateResult(scores) {
+  const bases = get16BaseCoords();
+
+  // 计算所有16个基类的距离
+  const candidates = bases.map(b => ({
+    base: b,
+    dist: euclideanDist(scores, b.coord)
+  }));
+
+  // 完美元匹配直接返回
+  const exact = candidates.find(c => c.dist < 0.001);
+  if (exact) return buildResultFromBase(exact.base, scores);
+
+  // 距离倒数 = 权重：weight = 1 / (dist + ε)
+  // ε=0.01 防止除零，同时让极近的候选获得压倒性概率优势
+  const EPSILON = 0.01;
+  candidates.forEach(c => { c.weight = 1 / (c.dist + EPSILON); });
+  const totalWeight = candidates.reduce((s, c) => s + c.weight, 0);
+
+  // 带权随机抽取——越近概率越高，但所有16种植物都有机会被选中
+  let rand = Math.random() * totalWeight;
+  let selected = candidates[0];
+  for (const c of candidates) {
+    rand -= c.weight;
+    if (rand <= 0) { selected = c; break; }
+  }
+
+  return buildResultFromBase(selected.base, scores);
+}
+
+// 根据植物基类 + chronos 相位构建最终结果
+function buildResultFromBase(base, scores) {
+  const isDivergent = scores.chronos > 0;
+  const variant = isDivergent ? base.group.divergent : base.group.convergent;
+  const quotes = variant.quotes || [''];
+  const quoteIdx = Math.floor(Math.random() * quotes.length);
+
+  return {
+    name: variant.name,
+    sub: variant.sub,
+    quote: quotes[quoteIdx],
+    phase: isDivergent ? '刚展开的叶片' : '沉入泥土的种子',
+    categoryKey: base.key
+  };
+}
+
+// 兼容旧接口
+function applyChaosToQuote(quote) {
+  return quote;
+}
+
+// 综合获取完整结果
+function buildFullResult(scores) {
+  const primary = calculateResult(scores);
+  const flower = pickSuitableFlower(scores);
+  const partner = pickPartnerPlant(scores);
+  const resonanceData = pickResonancePlants(scores);
+  const resonancePlants = resonanceData.items;
+  const easyToKeep = resonanceData.easyToKeep;
+  const hardToKeep = resonanceData.hardToKeep;
+  const tags = buildTags(primary.categoryKey);
+  const sketch = buildSketch(scores);
+  const whyDie = buildWhyDie(scores);
+  const shadowSlice = buildShadowSlice(scores);
+  const insomnia = buildInsomnia(scores);
+  return { primary, flower, partner, resonancePlants, easyToKeep, hardToKeep, tags, sketch, whyDie, shadowSlice, insomnia };
+}
+
+// ==================== 应用状态 ====================
+const state = {
+  currentQuestionIndex: 0,
+  isAnimating: false,
+  answerHistory: [] // [重构逻辑：记录答题历史用于 Chronos 计算]
+};
+
+// ==================== 页面切换 ====================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  if (target) target.classList.add('active');
+}
+
+// ==================== 开始测试 ====================
+function startQuiz() {
+  ScoreEngine.reset();
+  state.currentQuestionIndex = 0;
+  state.isAnimating = false;
+  state.answerHistory = [];
+  // [重构逻辑：每次重新测试时刷新混沌种子 — 全量随机]
+  chaosSeed = Math.random();
+  showPage('quizPage');
+  renderQuestion(0);
+}
+
+// ==================== 渲染题目 ====================
+function renderQuestion(index) {
+  if (index >= questions.length) { finishQuiz(); return; }
+  const q = questions[index];
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const card = document.getElementById('questionCard');
+
+  const progress = (index / questions.length) * 100;
+  progressFill.style.width = progress + '%';
+  progressText.textContent = `${index + 1} / ${questions.length}`;
+
+  document.getElementById('questionNumber').textContent = `Q${q.id}`;
+  document.getElementById('questionTitle').textContent = q.title;
+
+  const optionsContainer = document.getElementById('optionsContainer');
+  optionsContainer.innerHTML = '';
+  q.options.forEach((opt, optIndex) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.innerHTML = `<span class="option-label">${opt.label}</span>${opt.text}`;
+    btn.addEventListener('click', () => selectOption(index, optIndex, btn));
+    optionsContainer.appendChild(btn);
+  });
+
+  card.classList.remove('switching');
+  void card.offsetWidth;
+}
+
+// ==================== 选择选项 ====================
+function selectOption(questionIndex, optionIndex, btnElement) {
+  if (state.isAnimating) return;
+  state.isAnimating = true;
+
+  document.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+  btnElement.classList.add('selected');
+
+  const effects = questions[questionIndex].options[optionIndex].effects;
+  ScoreEngine.apply(effects);
+
+  // [重构逻辑：记录 effect 强度用于 Chronos 计算]
+  const totalEffect = Object.values(effects).reduce((a, b) => a + Math.abs(b), 0);
+  state.answerHistory.push(totalEffect);
+
+  setTimeout(() => {
+    const nextIndex = questionIndex + 1;
+    if (nextIndex >= questions.length) {
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressText').textContent = `${questions.length} / ${questions.length}`;
+      setTimeout(() => finishQuiz(), 400);
+    } else {
+      const card = document.getElementById('questionCard');
+      card.classList.add('switching');
+      setTimeout(() => {
+        state.currentQuestionIndex = nextIndex;
+        renderQuestion(nextIndex);
+        state.isAnimating = false;
+      }, 350);
+    }
+  }, 300);
+}
+
+// ==================== 生长动画触发 ====================
+// [优化：结果展示时，植物静默苏醒 — stagger延迟更细腻，制造仪式感]
+function triggerGrowAnimations() {
+  const growTargets = [
+    document.getElementById('resultHeader'),
+    document.getElementById('resultQuoteBlock'),
+    document.getElementById('resultTagsRow'),
+    document.getElementById('radarTitle'),
+    document.getElementById('radarContainer')
+  ];
+
+  // 标题区依次生长 — 优化：更从容的间隔
+  growTargets.forEach((el, i) => {
+    if (el) {
+      setTimeout(() => el.classList.add('grown'), 80 + i * 140);
+    }
+  });
+
+  // 卡片依次生长 — 优化：包含共振卡片 + 生活植物双卡片，更细腻的 stagger
+  const cards = document.querySelectorAll('.slice-card, .contract-card, .resonance-card, .life-plant-duo');
+  cards.forEach((card, i) => {
+    setTimeout(() => card.classList.add('grown'), 650 + i * 160);
+  });
+}
+
+// ==================== 完成测试 ====================
+function finishQuiz() {
+  state.isAnimating = false;
+  const scores = ScoreEngine.getSnapshot();
+
+  // [重构逻辑：计算 Chronos 时间相位维度]
+  ScoreEngine.computeChronos(state.answerHistory);
+  const finalScores = ScoreEngine.getSnapshot();
+
+  // [重构逻辑：扰动因子注入 — 五维各±10随机噪声，打破固定阈值，制造动态跳变]
+  const chaoticScores = addNoisePerturbation(finalScores);
+
+  const result = buildFullResult(chaoticScores);
+  const primary = result.primary;
+
+  // 重置生长动画状态
+  document.querySelectorAll('.grown').forEach(el => el.classList.remove('grown'));
+
+  // 渲染头部 — SVG图标
+  const iconContainer = document.getElementById('resultIconSvg');
+  const iconSvg = plantIcons[primary.name] || plantIcons["定轨孢子"];
+  iconContainer.innerHTML = iconSvg;
+
+  document.getElementById('resultPlantName').textContent = primary.name;
+  document.getElementById('resultPlantSubtitle').textContent = primary.sub;
+  document.getElementById('resultPhaseBadge').textContent = primary.phase;
+
+  // 渲染金句（混沌处理）
+  document.getElementById('resultQuote').textContent = applyChaosToQuote(primary.quote);
+
+  // 渲染胶囊标签
+  const tagsRow = document.getElementById('resultTagsRow');
+  tagsRow.innerHTML = '';
+  result.tags.forEach(t => {
+    const pill = document.createElement('span');
+    pill.className = 'result-tag-pill';
+    pill.textContent = t;
+    tagsRow.appendChild(pill);
+  });
+
+  // 渲染生命切片卡片
+  document.getElementById('textSketch').textContent = result.sketch;
+  document.getElementById('textWhyDie').textContent = result.whyDie;
+  document.getElementById('textShadowSlice').textContent = result.shadowSlice;
+  document.getElementById('labelSuitable').textContent = result.flower.name;
+  document.getElementById('textSuitable').textContent = result.flower.desc;
+
+  // [重构逻辑：精神搭子文案减脂至50字内]
+  document.getElementById('textLover').textContent = '很远的地方，有一株「' + result.partner + '」。它也许正和你一样，在某个角落安静地呼吸。你们未必相见，但此刻读着同一段文字。';
+
+  document.getElementById('textInsomnia').textContent = result.insomnia;
+
+  // [重构：共振植物谱系渲染 — 32条目池，随机抽取mutter]
+  const resonanceList = document.getElementById('resonanceList');
+  resonanceList.innerHTML = '';
+  result.resonancePlants.forEach(rp => {
+    const item = document.createElement('div');
+    item.className = 'resonance-item';
+    item.innerHTML = `
+      <svg class="resonance-plant-icon" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="4" stroke="#5B8C6F" stroke-width="1.2" opacity="0.5"/>
+        <path d="M11 7 L11 3 M11 15 L11 19 M7 11 L3 11 M15 11 L19 11" stroke="#D4847A" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+      <div>
+        <div class="resonance-plant-name">${rp.name}</div>
+        <div class="resonance-plant-mutter">${rp.mutter}</div>
+      </div>
+    `;
+    resonanceList.appendChild(item);
+  });
+
+  // [新增：生活植物双卡片渲染 — 左侧慰藉、右侧困境]
+  const easyList = document.getElementById('easyKeepList');
+  easyList.innerHTML = '';
+  result.easyToKeep.forEach(name => {
+    const div = document.createElement('div');
+    div.className = 'life-plant-item';
+    div.innerHTML = `<span class="plant-dot"></span><span><span class="plant-name">${name}</span></span>`;
+    easyList.appendChild(div);
+  });
+  if (result.easyToKeep.length === 0) {
+    easyList.innerHTML = '<div class="life-plant-item"><span class="plant-dot"></span><span>每一株安静的植物，都可能是你的慰藉</span></div>';
+  }
+
+  const hardList = document.getElementById('hardKeepList');
+  hardList.innerHTML = '';
+  result.hardToKeep.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'life-plant-item';
+    div.innerHTML = `<span class="plant-dot"></span><span><span class="plant-name">${h.name}</span><br><span class="plant-reason">${h.reason}</span></span>`;
+    hardList.appendChild(div);
+  });
+  if (result.hardToKeep.length === 0) {
+    hardList.innerHTML = '<div class="life-plant-item"><span class="plant-dot"></span><span>也许，你和植物的缘分才刚刚开始</span></div>';
+  }
+
+  showPage('resultPage');
+
+  // 触发生长动画
+  setTimeout(() => triggerGrowAnimations(), 150);
+
+  // [重构逻辑：雷达图增加 Chronos 第五维]
+  const dimOrder = ['light', 'dry', 'bloom', 'soil', 'chronos'];
+  setTimeout(() => renderRadarChart(chaoticScores, dimOrder), 500);
+}
+
+// ==================== 雷达图渲染（保持 Chart.js 逻辑，升级为五维） ====================
+let radarChartInstance = null;
+
+function renderRadarChart(scores, allDims) {
+  // 安全保护：Chart.js 未加载时静默跳过，不阻断页面渲染
+  if (typeof Chart === 'undefined') { return; }
+  const canvas = document.getElementById('radarChart');
+  const ctx = canvas.getContext('2d');
+
+  if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(181, 69, 58, 0.2)');
+  gradient.addColorStop(0.5, 'rgba(91, 140, 111, 0.1)');
+  gradient.addColorStop(1, 'rgba(59, 90, 109, 0.04)');
+
+  const pointColors = allDims.map(dim => {
+    if (dim === 'chronos') return scores[dim] > 0 ? 'rgba(181, 69, 58, 0.9)' : 'rgba(59, 90, 109, 0.6)';
+    return scores[dim] >= 50 ? 'rgba(181, 69, 58, 0.9)' : 'rgba(91, 140, 111, 0.5)';
+  });
+  const pointSizes = allDims.map(dim => {
+    if (dim === 'chronos') return 7;
+    return scores[dim] >= 50 ? 6 : 3;
+  });
+
+  // [重构逻辑：Chronos 值映射到 0-100 范围以便雷达图显示]
+  const displayData = allDims.map(dim => {
+    if (dim === 'chronos') {
+      // chronos 范围约 -40 ~ +40，映射到 0-100
+      return Math.max(5, Math.min(95, (scores[dim] + 50)));
+    }
+    return scores[dim];
+  });
+
+  radarChartInstance = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['对光的直觉', '沉默的重量', '绽放的节律', '想停下的地方', '时间的纹理'],
+      datasets: [{
+        label: '一种模糊的形状',
+        data: displayData,
+        backgroundColor: gradient,
+        borderColor: 'rgba(181, 69, 58, 0.5)',
+        borderWidth: 1.8,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: pointSizes,
+        pointHoverRadius: 7,
+        tension: 0.25
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          beginAtZero: false, min: 0, max: 100,
+          ticks: { display: false, stepSize: 20 },
+          pointLabels: {
+            font: { size: 11, weight: '600', family: "'PingFang SC','Microsoft YaHei',sans-serif" },
+            color: '#5C5048'
+          },
+          grid: { color: 'rgba(181, 69, 58, 0.08)', lineWidth: 1 },
+          angleLines: { color: 'rgba(181, 69, 58, 0.06)', lineWidth: 1 },
+          backgroundColor: 'rgba(247, 244, 239, 0.3)'
+        }
+      },
+      animation: { duration: 1400, easing: 'easeInOutQuart' }
+    }
+  });
+}
+
+// ==================== 保存报告为图片 ====================
+async function saveReportAsImage() {
+  const btn = document.getElementById('btnSaveReport');
+  const target = document.getElementById('resultPage');
+  if (!target) return;
+
+  // 安全保护：html2canvas 未加载时，提示用户并优雅降级
+  if (typeof html2canvas === 'undefined') {
+    btn.textContent = '网络信号太弱，请稍后再试';
+    setTimeout(() => { btn.textContent = '保存这份性格标本'; btn.disabled = false; }, 2000);
+    return;
+  }
+
+  // 记录原始文案，截图期间替换为更仪式感的按钮文案
+  const originalText = btn.textContent;
+  btn.textContent = '正在凝固这一刻……';
+  btn.disabled = true;
+
+  // 等待一帧让 UI 更新 + 确保 Chart.js canvas 完全渲染
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => setTimeout(r, 200));
+
+  try {
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      backgroundColor: '#F9F6F1',
+      useCORS: true,
+      allowTaint: false,
+      logging: false
+    });
+
+    // 创建临时 <a> 自动下载
+    const link = document.createElement('a');
+    link.download = '我的性格标本.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    console.error('截图生成失败:', e);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+// ==================== 重新测试 ====================
+function restartQuiz() {
+  if (radarChartInstance) { radarChartInstance.destroy(); radarChartInstance = null; }
+  ScoreEngine.reset();
+  state.currentQuestionIndex = 0;
+  state.isAnimating = false;
+  state.answerHistory = [];
+  // [重构逻辑：重置生长动画]
+  document.querySelectorAll('.grown').forEach(el => el.classList.remove('grown'));
+  showPage('homePage');
+}
+
+// ==================== 强制验证：32种植物可达性扫描 ====================
+// [在控制台调用 verifyAll32Plants() 验证16种基类×2种相位的所有32种结果]
+// [算法：对每个基类理想坐标+chronos极性，施加100次扰动，验证加权随机匹配能否触发对应结果]
+function verifyAll32Plants() {
+  const bases = get16BaseCoords();
+  const TRIALS = 100;
+  const results = {};
+
+  for (const base of bases) {
+    for (const chronosPolarity of [1, -1]) {
+      const chronosVal = chronosPolarity > 0 ? 35 : -35;
+      const targetName = chronosPolarity > 0 ? base.group.divergent.name : base.group.convergent.name;
+      const targetPhase = chronosPolarity > 0 ? '刚展开的叶片' : '沉入泥土的种子';
+      const key = targetName + ' · ' + targetPhase;
+      results[key] = { expected: targetName, phase: targetPhase, hits: 0, total: TRIALS };
+
+      for (let t = 0; t < TRIALS; t++) {
+        const testScores = {
+          light:  base.coord.light,
+          dry:    base.coord.dry,
+          bloom:  base.coord.bloom,
+          soil:   base.coord.soil,
+          chronos: chronosVal
+        };
+        const noisyScores = addNoisePerturbation(testScores);
+        const matched = calculateResult(noisyScores);
+        if (matched.name === targetName && matched.phase === targetPhase) {
+          results[key].hits++;
+        }
+      }
+    }
+  }
+
+  console.log('=== 32种植物可达性验证报告 ===');
+  console.log('(距离倒数加权随机 × 每目标' + TRIALS + '次模拟)');
+  console.log('');
+
+  let unreachable = [];
+  let totalHitRate = 0;
+  const totalVariants = Object.keys(results).length;
+
+  for (const [key, data] of Object.entries(results)) {
+    const rate = (data.hits / data.total * 100).toFixed(0);
+    const symbol = data.hits === 0 ? '✗ 不可达! ' : data.hits < 3 ? '△ ' : '✓ ';
+    totalHitRate += data.hits / data.total;
+
+    console.log(
+      symbol +
+      key.padEnd(28) +
+      ('  命中 ' + String(data.hits) + '/' + data.total).padEnd(16) +
+      '(' + rate + '%)'
+    );
+
+    if (data.hits === 0) unreachable.push(key);
+  }
+
+  console.log('');
+  console.log('平均命中率: ' + (totalHitRate / totalVariants * 100).toFixed(1) + '%');
+  console.log('不可达结果数: ' + unreachable.length + ' / 32');
+
+  if (unreachable.length > 0) {
+    console.warn('⚠ 以下植物在当前映射中不可达:', unreachable);
+  } else {
+    console.log('✅ 全部32种植物均可被公平触发。');
+  }
+
+  return results;
+}
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded', () => { showPage('homePage'); });
+</script>
+
+</body>
+</html>
